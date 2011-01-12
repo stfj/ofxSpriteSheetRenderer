@@ -45,6 +45,7 @@ void testApp::update(){
 		newSprite->speed=ofRandom(1,5); //set its speed
 		newSprite->animation = walkAnimation; //set its animation to the walk animation we declared
 		newSprite->animation.frame_duration /= newSprite->speed; //adjust its frame duration based on how fast it is walking (faster = smaller)
+		newSprite->animation.index = (int)ofRandom(0,4)*8; //change the start index of our sprite. we have 4 rows of animations and our spritesheet is 8 tiles wide, so our possible start indicies are 0, 8, 16, and 24
 		sprites.push_back(newSprite); //add our sprite to the vector
 	}
 }
