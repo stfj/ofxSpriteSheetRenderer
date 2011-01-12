@@ -1,0 +1,3 @@
+ofxSpriteSheetRenderer is a fast and easy to use spriteSheet renderer. It supports width/height equal sprite sheets of any size (only pow2 sizes on openGLES), built in animation, scaling, rotation, tinting, flipping, layers and more, all within a super fast batch rendered environment.
+
+ofxSpriteSheetRenderer was written by Zach Gage and Ramsey Nasser
