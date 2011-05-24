@@ -37,10 +37,10 @@ ofxSpriteSheetRenderer::ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLaye
 	safeMode = true;
 	
 	gameTime = ofGetElapsedTimeMillis();
+		
+	reAllocateArrays(_numLayers, _tilesPerLayer, _defaultLayer, _tileSize);
 	
 	generateRotationArrays();
-	
-	reAllocateArrays(_numLayers, _tilesPerLayer, _defaultLayer, _tileSize);
 }
 
 ofxSpriteSheetRenderer::~ofxSpriteSheetRenderer()
@@ -102,9 +102,9 @@ void ofxSpriteSheetRenderer::allocate(int widthHeight, int internalGLScaleMode)
 	if(texture == NULL)
 	{
 		tileSize_f = tileSize;
-		#ifdef TARGET_OPENGLES	// if we don't have arb, it's crazy important that things are power of 2 so that this float is set properly
+#ifdef TARGET_OPENGLES	// if we don't have arb, it's crazy important that things are power of 2 so that this float is set properly
 		tileSize_f /= widthHeight;
-		#endif
+#endif
 		
 		spriteSheetWidth = widthHeight/tileSize;
 		
@@ -512,7 +512,7 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(int tile_name, int frame, floa
 	frameX += frame*wh*tileSize_f;
 	
 	addTexCoords(f, frameX, frameY, layer, wh, wh);
-	
+
 	rot*=2;
 	
 	wh*=scale;
