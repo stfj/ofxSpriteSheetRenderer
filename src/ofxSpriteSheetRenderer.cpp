@@ -512,9 +512,11 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(int tile_name, int frame, floa
 	frameX += frame*wh*tileSize_f;
 	
 	addTexCoords(f, frameX, frameY, layer, wh, wh);
-
+	rot =rot%360;
+	if (rot<0)
+		rot+=360;
 	rot*=2;
-	
+
 	wh*=scale;
 	//verticies ------------------------------------
 	verts[vertexOffset     ] = x+wh*ul[rot  ]; //ul ur ll
