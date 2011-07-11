@@ -44,6 +44,16 @@ typedef struct {
 	float w;                      //								how many tiles right of the index are included
 	float h;                      //								how many tiles down from the index are included
 	
+	float tex_y;					// how much offset from the top left of the sheet the texture is (no longer using the index for lookups)
+	float tex_x;					// doing it this way so that we can have differently sized textures
+	float tex_w;					// how big the texture is (on the sheet)
+	float tex_h;
+	
+	float sprite_x;					// how far offset the display of the sprite should be from the requested display position (how much alpha got trimmed when packing the sprite)
+	float sprite_y;
+	float spritesource_w;			// the size of the sprite before the alpha trimming took place
+	float spritesource_h;			// used for doing rotations around the center of the sprite (maybe, used for nothing for now)		
+	
 	unsigned int frame_duration;  //								how many milliseconds each frame should be on screen. less = faster animation.
 	unsigned long next_tick;      // DEFAULT SHOULD BE SET TO 0.	when in gametime the frame should be changed. updated automatically.
 	
@@ -83,7 +93,7 @@ public:
 	bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, float scale = 1.0,          int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenterRotatedTile(animation_t* sprite,         float x, float y, int layer = -1, float wh = 1,          flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
 	
-	bool addTile             (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
+	bool addTile             (float tex_x, float tex_y, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenterRotatedTile(int tile_name, int frame, float x, float y, int layer = -1, float wh = 1,             flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255);
 	
@@ -122,6 +132,7 @@ protected:
 	int defaultLayer;
 	int tilesPerLayer;
 	int tileSize;
+	int sheetSize;
 	
 	unsigned long gameTime;
 	

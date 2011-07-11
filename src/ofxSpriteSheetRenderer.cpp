@@ -105,6 +105,7 @@ void ofxSpriteSheetRenderer::allocate(int widthHeight, int internalGLScaleMode)
 #ifdef TARGET_OPENGLES	// if we don't have arb, it's crazy important that things are power of 2 so that this float is set properly
 		tileSize_f /= widthHeight;
 #endif
+		sheetSize = widthHeight;
 		
 		spriteSheetWidth = widthHeight/tileSize;
 		
@@ -194,8 +195,8 @@ bool ofxSpriteSheetRenderer::addTile(animation_t* sprite, float x, float y, int 
 		index = sprite->index;
 		frame = sprite->frame;
 	}
-	
-	return addTile(index, frame, x, y, layer, sprite->w, sprite->h, f, r, g, b, alpha);
+	// we are no longer handling the animation system in the tile renderer, so we are going to pass x y coords rather than indexes to the next object
+	return addTile(sprite->tex_x, sprite->tex_y, x, y, layer, sprite->w, sprite->h, f, r, g, b, alpha);
 }
 
 bool ofxSpriteSheetRenderer::addCenteredTile(animation_t* sprite, float x, float y, int layer, flipDirection f, float scale, int r, int g, int b, int alpha) {
@@ -262,7 +263,7 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(animation_t* sprite, float x, 
 	return addCenterRotatedTile(index, frame, x, y, layer, sprite->w, f, scale, rot, r, g, b, alpha);
 }
 
-bool ofxSpriteSheetRenderer::addTile(int tile_name, int frame, float x, float y, int layer, float w, float h, flipDirection f, int r, int g, int b, int alpha)
+bool ofxSpriteSheetRenderer::addTile(float tex_x, float tex_y, float x, float y, int layer, float w, float h, flipDirection f, int r, int g, int b, int alpha)
 {
 	if(layer==-1)
 		layer=defaultLayer;
@@ -285,15 +286,19 @@ bool ofxSpriteSheetRenderer::addTile(int tile_name, int frame, float x, float y,
 		return false;
 	}
 	
-	float frameX;
-	float frameY;
+	float frameX = tex_x;
+	float frameY = tex_y;
 	int layerOffset = layer*tilesPerLayer;
 	int vertexOffset = (layerOffset + numSprites[layer])*18;
 	int colorOffset = (layerOffset + numSprites[layer])*24;
+
+	//cout << "texture x offset: " << frameX << endl;
+
+//	getFrameXandY(tile_name, frameX, frameY);
 	
-	getFrameXandY(tile_name, frameX, frameY);
-	
-	frameX += frame*w*tileSize_f;
+//	frameX += frame*w*tileSize_f;
+	frameX /= sheetSize;
+	frameY /= sheetSize;
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
 	
@@ -623,7 +628,8 @@ void ofxSpriteSheetRenderer::addTexCoords(flipDirection f, float &frameX, float 
 	
 	w*=tileSize_f;
 	h*=tileSize_f;
-	
+	//cout << "texture x offset: " << frameX << endl;
+
 	switch (f) {
 		case F_NONE:
 			coords[coordOffset     ] = frameX;
