@@ -196,7 +196,7 @@ bool ofxSpriteSheetRenderer::addTile(animation_t* sprite, float x, float y, int 
 		frame = sprite->frame;
 	}
 	// we are no longer handling the animation system in the tile renderer, so we are going to pass x y coords rather than indexes to the next object
-	return addTile(sprite->tex_x, sprite->tex_y, x, y, layer, sprite->w, sprite->h, f, r, g, b, alpha);
+	return addTile(sprite->tex_x, sprite->tex_y, x+sprite->sprite_x, y+sprite->sprite_y, layer, sprite->tex_w, sprite->tex_h, f, r, g, b, alpha);
 }
 
 bool ofxSpriteSheetRenderer::addCenteredTile(animation_t* sprite, float x, float y, int layer, flipDirection f, float scale, int r, int g, int b, int alpha) {
@@ -299,11 +299,13 @@ bool ofxSpriteSheetRenderer::addTile(float tex_x, float tex_y, float x, float y,
 //	frameX += frame*w*tileSize_f;
 	frameX /= sheetSize;
 	frameY /= sheetSize;
+//	w /= sheetSize;
+//	h /= sheetSize;
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
 	
-	w*=tileSize;
-	h*=tileSize;
+//	w*=tileSize;
+//	h*=tileSize;
 	
 	//verticies ------------------------------------
 	verts[vertexOffset     ] = x;
@@ -625,11 +627,9 @@ void ofxSpriteSheetRenderer::addTexCoords(flipDirection f, float &frameX, float 
 {
 	int layerOffset = layer*tilesPerLayer;
 	int coordOffset = (layerOffset + numSprites[layer])*12;
+	w /= sheetSize;
+	h /= sheetSize;
 	
-	w*=tileSize_f;
-	h*=tileSize_f;
-	//cout << "texture x offset: " << frameX << endl;
-
 	switch (f) {
 		case F_NONE:
 			coords[coordOffset     ] = frameX;
