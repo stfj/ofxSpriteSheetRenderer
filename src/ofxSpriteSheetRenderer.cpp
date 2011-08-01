@@ -195,6 +195,8 @@ bool ofxSpriteSheetRenderer::addTile(animation_t* sprite, float x, float y, int 
 		index = sprite->index;
 		frame = sprite->frame;
 	}
+	if(f==F_HORIZ)
+		return addTile(sprite->tex_x, sprite->tex_y, x+sprite->w-sprite->sprite_x-sprite->tex_w, y+sprite->sprite_y, layer, sprite->tex_w, sprite->tex_h, f, r, g, b, alpha);		
 	// we are no longer handling the animation system in the tile renderer, so we are going to pass x y coords rather than indexes to the next object
 	return addTile(sprite->tex_x, sprite->tex_y, x+sprite->sprite_x, y+sprite->sprite_y, layer, sprite->tex_w, sprite->tex_h, f, r, g, b, alpha);
 }
