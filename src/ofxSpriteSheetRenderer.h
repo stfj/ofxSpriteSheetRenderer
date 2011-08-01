@@ -95,7 +95,7 @@ public:
 	
 	bool addTile             (float tex_x, float tex_y, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255);
-	bool addCenterRotatedTile(int tile_name, int frame, float x, float y, int layer = -1, float wh = 1,             flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255);
+	bool addCenterRotatedTile(float tex_x, float tex_y, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255);
 	
 	void update(unsigned long time);
 	void draw();
@@ -143,10 +143,10 @@ protected:
 	int * numSprites;
 	int spriteSheetWidth;
 	
-	char ul[720];
-	char ur[720];
-	char ll[720];
-	char lr[720];
+	float ul[720];
+	float ur[720];
+	float ll[720];
+	float lr[720];
 };
 
 #endif

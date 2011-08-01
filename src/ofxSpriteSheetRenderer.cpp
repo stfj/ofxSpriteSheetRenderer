@@ -259,8 +259,9 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(animation_t* sprite, float x, 
 		index = sprite->index;
 		frame = sprite->frame;
 	}
-	
-	return addCenterRotatedTile(index, frame, x, y, layer, sprite->w, f, scale, rot, r, g, b, alpha);
+	// we are no longer handling the animation system in the tile renderer, so we are going to pass x y coords rather than indexes to the next object
+	return addCenterRotatedTile(sprite->tex_x, sprite->tex_y, x+sprite->sprite_x, y+sprite->sprite_y, layer, sprite->tex_w, sprite->tex_h, f, scale, rot, r, g, b, alpha);
+
 }
 
 bool ofxSpriteSheetRenderer::addTile(float tex_x, float tex_y, float x, float y, int layer, float w, float h, flipDirection f, int r, int g, int b, int alpha)
@@ -485,7 +486,7 @@ bool ofxSpriteSheetRenderer::addCenteredTile(int tile_name, int frame, float x, 
 	return true;
 }
 
-bool ofxSpriteSheetRenderer::addCenterRotatedTile(int tile_name, int frame, float x, float y, int layer, float wh, flipDirection f, float scale, int rot, int r, int g, int b, int alpha)
+bool ofxSpriteSheetRenderer::addCenterRotatedTile(float tex_x, float tex_y, float x, float y, int layer, float w, float h, flipDirection f, float scale, int rot, int r, int g, int b, int alpha)
 {
 	if(layer==-1)
 		layer=defaultLayer;
@@ -508,46 +509,56 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(int tile_name, int frame, floa
 		return false;
 	}
 	
-	float frameX;
-	float frameY;
+	float frameX = tex_x;
+	float frameY = tex_y;
+
 	int layerOffset = layer*tilesPerLayer;
 	int vertexOffset = (layerOffset + numSprites[layer])*18;
 	int colorOffset = (layerOffset + numSprites[layer])*24;
 	
-	getFrameXandY(tile_name, frameX, frameY);
+	frameX /= sheetSize;
+	frameY /= sheetSize;
+	//	w /= sheetSize;
+	//	h /= sheetSize;
 	
-	frameX += frame*wh*tileSize_f;
+	addTexCoords(f, frameX, frameY, layer, w, h);
+	w *= scale;
+	h *= scale;
+	float halfSize = sqrt((w/2)*(w/2)+(h/2)*(h/2));
 	
-	addTexCoords(f, frameX, frameY, layer, wh, wh);
+	w = halfSize;
+	h = halfSize;
+//	w /= 2;
+//	h /= 2;
 	rot =rot%360;
 	if (rot<0)
 		rot+=360;
 	rot*=2;
-
-	wh*=scale;
+	
+	
 	//verticies ------------------------------------
-	verts[vertexOffset     ] = x+wh*ul[rot  ]; //ul ur ll
-	verts[vertexOffset + 1 ] = y+wh*ul[rot+1];
+	verts[vertexOffset     ] = x+w*ul[rot  ]; //ul ur ll
+	verts[vertexOffset + 1 ] = y+h*ul[rot+1];
 	verts[vertexOffset + 2 ] = 0;
 	
-	verts[vertexOffset + 3 ] = x+wh*ur[rot  ];
-	verts[vertexOffset + 4 ] = y+wh*ur[rot+1];
+	verts[vertexOffset + 3 ] = x+w*ur[rot  ];
+	verts[vertexOffset + 4 ] = y+h*ur[rot+1];
 	verts[vertexOffset + 5 ] = 0;
 	
-	verts[vertexOffset + 6 ] = x+wh*ll[rot  ];
-	verts[vertexOffset + 7 ] = y+wh*ll[rot+1];
+	verts[vertexOffset + 6 ] = x+w*ll[rot  ];
+	verts[vertexOffset + 7 ] = y+h*ll[rot+1];
 	verts[vertexOffset + 8 ] = 0;
 	
-	verts[vertexOffset + 9 ] = x+wh*ur[rot  ]; //ur ll lr
-	verts[vertexOffset + 10] = y+wh*ur[rot+1];
+	verts[vertexOffset + 9 ] = x+w*ur[rot  ]; //ur ll lr
+	verts[vertexOffset + 10] = y+h*ur[rot+1];
 	verts[vertexOffset + 11] = 0;
 	
-	verts[vertexOffset + 12] = x+wh*ll[rot  ];
-	verts[vertexOffset + 13] = y+wh*ll[rot+1];
+	verts[vertexOffset + 12] = x+w*ll[rot  ];
+	verts[vertexOffset + 13] = y+h*ll[rot+1];
 	verts[vertexOffset + 14] = 0;
 	
-	verts[vertexOffset + 15] = x+wh*lr[rot  ];
-	verts[vertexOffset + 16] = y+wh*lr[rot+1];
+	verts[vertexOffset + 15] = x+w*lr[rot  ];
+	verts[vertexOffset + 16] = y+h*lr[rot+1];
 	verts[vertexOffset + 17] = 0;
 	
 	//colors ---------------------------------------
@@ -734,16 +745,13 @@ void ofxSpriteSheetRenderer::getFrameXandY(int tile_position, float &x, float &y
 }
 
 void ofxSpriteSheetRenderer::generateRotationArrays()
-{
-	//generate arrays
-	float halfSize = sqrt((tileSize/2)*(tileSize/2)+(tileSize/2)*(tileSize/2));
-	
+{	
 	// ul
 	int start = 225;
 	for(int i=0;i<360;i++)
 	{
-		ul[i*2    ] = int(cos(TWO_PI*((float)start/360))*halfSize);
-		ul[i*2 + 1] = int(sin(TWO_PI*((float)start/360))*halfSize);
+		ul[i*2    ] = cos(TWO_PI*((float)start/360));
+		ul[i*2 + 1] = sin(TWO_PI*((float)start/360));
 		start++;
 		if(start>=360)
 			start=0;
@@ -753,8 +761,8 @@ void ofxSpriteSheetRenderer::generateRotationArrays()
 	start = 315;
 	for(int i=0;i<360;i++)
 	{
-		ur[i*2    ] = int(cos(TWO_PI*((float)start/360))*halfSize);
-		ur[i*2 + 1] = int(sin(TWO_PI*((float)start/360))*halfSize);
+		ur[i*2    ] = cos(TWO_PI*((float)start/360));
+		ur[i*2 + 1] = sin(TWO_PI*((float)start/360));
 		start++;
 		if(start>=360)
 			start=0;
@@ -764,8 +772,8 @@ void ofxSpriteSheetRenderer::generateRotationArrays()
 	start = 45;
 	for(int i=0;i<360;i++)
 	{
-		lr[i*2    ] = int(cos(TWO_PI*((float)start/360))*halfSize);
-		lr[i*2 + 1] = int(sin(TWO_PI*((float)start/360))*halfSize);
+		lr[i*2    ] = cos(TWO_PI*((float)start/360));
+		lr[i*2 + 1] = sin(TWO_PI*((float)start/360));
 		start++;
 		if(start>=360)
 			start=0;
@@ -775,8 +783,8 @@ void ofxSpriteSheetRenderer::generateRotationArrays()
 	start = 135;
 	for(int i=0;i<360;i++)
 	{
-		ll[i*2    ] = int(cos(TWO_PI*((float)start/360))*halfSize);
-		ll[i*2 + 1] = int(sin(TWO_PI*((float)start/360))*halfSize);
+		ll[i*2    ] = cos(TWO_PI*((float)start/360));
+		ll[i*2 + 1] = sin(TWO_PI*((float)start/360));
 		start++;
 		if(start>=360)
 			start=0;
