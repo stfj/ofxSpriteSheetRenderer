@@ -262,7 +262,7 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(animation_t* sprite, float x, 
 		frame = sprite->frame;
 	}
 	// we are no longer handling the animation system in the tile renderer, so we are going to pass x y coords rather than indexes to the next object
-	return addCenterRotatedTile(sprite->tex_x, sprite->tex_y, x+sprite->sprite_x, y+sprite->sprite_y, layer, sprite->tex_w, sprite->tex_h, f, scale, rot, r, g, b, alpha);
+	return addCenterRotatedTile(sprite->tex_x, sprite->tex_y, x, y, layer, sprite->tex_w, sprite->tex_h, f, scale, rot, r, g, b, alpha);
 
 }
 
@@ -523,44 +523,73 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(float tex_x, float tex_y, floa
 	//	w /= sheetSize;
 	//	h /= sheetSize;
 	
+	int degOff = 0;
+	cout << w << " : " << h << endl;
+	if (w != h) {
+		degOff = atan2(w/2, h/2)*RAD_TO_DEG-45;
+		cout << degOff << endl;
+	}
 	addTexCoords(f, frameX, frameY, layer, w, h);
 	w *= scale;
 	h *= scale;
 	float halfSize = sqrt((w/2)*(w/2)+(h/2)*(h/2));
 	
+	
 	w = halfSize;
 	h = halfSize;
-//	w /= 2;
-//	h /= 2;
-	rot =rot%360;
+
+	rot = rot%360;
 	if (rot<0)
 		rot+=360;
-	rot*=2;
 	
+	int ulRot = rot-degOff;
+	int urRot = rot+degOff;
+	int llRot = rot+degOff;
+	int lrRot = rot-degOff;
+	
+	// scale to 360
+	ulRot = ulRot%360;
+	if (ulRot<0)
+		ulRot+=360;
+	urRot = urRot%360;
+	if (urRot<0)
+		urRot+=360;
+	llRot = llRot%360;
+	if (llRot<0)
+		llRot+=360;
+	lrRot = lrRot%360;
+	if (lrRot<0)
+		lrRot+=360;
+	
+	rot*=2;
+	ulRot*=2;
+	urRot*=2;
+	llRot*=2;
+	lrRot*=2;
 	
 	//verticies ------------------------------------
-	verts[vertexOffset     ] = x+w*ul[rot  ]; //ul ur ll
-	verts[vertexOffset + 1 ] = y+h*ul[rot+1];
+	verts[vertexOffset     ] = x+w*ul[ulRot  ]; //ul ur ll
+	verts[vertexOffset + 1 ] = y+h*ul[ulRot+1];
 	verts[vertexOffset + 2 ] = 0;
 	
-	verts[vertexOffset + 3 ] = x+w*ur[rot  ];
-	verts[vertexOffset + 4 ] = y+h*ur[rot+1];
+	verts[vertexOffset + 3 ] = x+w*ur[urRot  ];
+	verts[vertexOffset + 4 ] = y+h*ur[urRot+1];
 	verts[vertexOffset + 5 ] = 0;
 	
-	verts[vertexOffset + 6 ] = x+w*ll[rot  ];
-	verts[vertexOffset + 7 ] = y+h*ll[rot+1];
+	verts[vertexOffset + 6 ] = x+w*ll[llRot  ];
+	verts[vertexOffset + 7 ] = y+h*ll[llRot+1];
 	verts[vertexOffset + 8 ] = 0;
 	
-	verts[vertexOffset + 9 ] = x+w*ur[rot  ]; //ur ll lr
-	verts[vertexOffset + 10] = y+h*ur[rot+1];
+	verts[vertexOffset + 9 ] = x+w*ur[urRot  ]; //ur ll lr
+	verts[vertexOffset + 10] = y+h*ur[urRot+1];
 	verts[vertexOffset + 11] = 0;
 	
-	verts[vertexOffset + 12] = x+w*ll[rot  ];
-	verts[vertexOffset + 13] = y+h*ll[rot+1];
+	verts[vertexOffset + 12] = x+w*ll[llRot  ];
+	verts[vertexOffset + 13] = y+h*ll[llRot+1];
 	verts[vertexOffset + 14] = 0;
 	
-	verts[vertexOffset + 15] = x+w*lr[rot  ];
-	verts[vertexOffset + 16] = y+h*lr[rot+1];
+	verts[vertexOffset + 15] = x+w*lr[lrRot  ];
+	verts[vertexOffset + 16] = y+h*lr[lrRot+1];
 	verts[vertexOffset + 17] = 0;
 	
 	//colors ---------------------------------------
