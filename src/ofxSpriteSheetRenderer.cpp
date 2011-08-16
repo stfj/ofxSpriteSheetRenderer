@@ -265,6 +265,12 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(animation_t* sprite, float x, 
 	return addCenterRotatedTile(sprite->tex_x, sprite->tex_y, x, y, layer, sprite->tex_w, sprite->tex_h, f, scale, rot, r, g, b, alpha);
 
 }
+bool ofxSpriteSheetRenderer::addCornerTile(animation_t* sprite, ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, int r, int g, int b, int alpha)
+{
+	if(layer==-1)
+		layer=defaultLayer;
+	return addCornerTile(sprite->tex_x, sprite->tex_y, p1, p2, p3, p4, layer, sprite->tex_w, sprite->tex_h, r, g, b, alpha);
+}
 
 bool ofxSpriteSheetRenderer::addTile(float tex_x, float tex_y, float x, float y, int layer, float w, float h, flipDirection f, int r, int g, int b, int alpha)
 {
@@ -295,21 +301,11 @@ bool ofxSpriteSheetRenderer::addTile(float tex_x, float tex_y, float x, float y,
 	int vertexOffset = (layerOffset + numSprites[layer])*18;
 	int colorOffset = (layerOffset + numSprites[layer])*24;
 
-	//cout << "texture x offset: " << frameX << endl;
-
-//	getFrameXandY(tile_name, frameX, frameY);
-	
-//	frameX += frame*w*tileSize_f;
 	frameX /= sheetSize;
 	frameY /= sheetSize;
-//	w /= sheetSize;
-//	h /= sheetSize;
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
-	
-//	w*=tileSize;
-//	h*=tileSize;
-	
+		
 	//verticies ------------------------------------
 	verts[vertexOffset     ] = x;
 	verts[vertexOffset + 1 ] = y;
@@ -524,10 +520,8 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(float tex_x, float tex_y, floa
 	//	h /= sheetSize;
 	
 	int degOff = 0;
-	cout << w << " : " << h << endl;
 	if (w != h) {
 		degOff = atan2(w/2, h/2)*RAD_TO_DEG-45;
-		cout << degOff << endl;
 	}
 	addTexCoords(f, frameX, frameY, layer, w, h);
 	w *= scale;
@@ -631,6 +625,108 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(float tex_x, float tex_y, floa
 	numSprites[layer]++;
 	
 	return true;
+}
+bool ofxSpriteSheetRenderer::addCornerTile(float tex_x, float tex_y,  ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, float w, float h, int r, int g, int b, int alpha)
+{
+	flipDirection f = F_NONE;
+	if(layer==-1)
+		layer=defaultLayer;
+	
+	if(texture == NULL)
+	{
+		cerr << "RENDER ERROR: No texture loaded!"  << endl;
+		return false;
+	}
+	
+	if(numSprites[layer] >= tilesPerLayer)
+	{
+		cerr << "RENDER ERROR: Layer " << layer << " over allocated! Max " << tilesPerLayer << " sprites per layer!"  << endl;
+		return false;
+	}
+	
+	if(layer > numLayers)
+	{
+		cerr << "RENDER ERROR: Bogus layer '" << layer << "'! Only " << numLayers << " layers compiled!"  << endl;
+		return false;
+	}
+	
+	float frameX = tex_x;
+	float frameY = tex_y;
+	int layerOffset = layer*tilesPerLayer;
+	int vertexOffset = (layerOffset + numSprites[layer])*18;
+	int colorOffset = (layerOffset + numSprites[layer])*24;
+	
+	frameX /= sheetSize;
+	frameY /= sheetSize;
+	
+	addTexCoords(f, frameX, frameY, layer, w, h);
+	
+	//verticies ------------------------------------
+	verts[vertexOffset     ] = p1.x; //tl
+	verts[vertexOffset + 1 ] = p1.y;
+	verts[vertexOffset + 2 ] = 0;
+	
+	verts[vertexOffset + 3 ] = p2.x; //tr
+	verts[vertexOffset + 4 ] = p2.y;
+	verts[vertexOffset + 5 ] = 0;
+	
+	verts[vertexOffset + 6 ] = p4.x;	//bl
+	verts[vertexOffset + 7 ] = p4.y;
+	verts[vertexOffset + 8 ] = 0;
+	
+	
+	
+	verts[vertexOffset + 9 ] = p2.x; //tr
+	verts[vertexOffset + 10] = p2.y;
+	verts[vertexOffset + 11] = 0;
+	
+	verts[vertexOffset + 12] = p4.x;	//bl
+	verts[vertexOffset + 13] = p4.y;
+	verts[vertexOffset + 14] = 0;
+	
+	verts[vertexOffset + 15] = p3.x; //br
+	verts[vertexOffset + 16] = p3.y;
+	verts[vertexOffset + 17] = 0;
+	
+	//colors ---------------------------------------
+	
+	colors[colorOffset	 ] = r;
+	colors[colorOffset + 1 ] = g;
+	colors[colorOffset + 2 ] = b;
+	colors[colorOffset + 3 ] = alpha;
+	
+	colors[colorOffset + 4 ] = r;
+	colors[colorOffset + 5 ] = g;
+	colors[colorOffset + 6 ] = b;
+	colors[colorOffset + 7 ] = alpha;
+	
+	colors[colorOffset + 8 ] = r;
+	colors[colorOffset + 9 ] = g;
+	colors[colorOffset + 10] = b;
+	colors[colorOffset + 11] = alpha;
+	
+	
+	
+	colors[colorOffset + 12] = r;
+	colors[colorOffset + 13] = g;
+	colors[colorOffset + 14] = b;
+	colors[colorOffset + 15] = alpha;
+	
+	colors[colorOffset + 16] = r;
+	colors[colorOffset + 17] = g;
+	colors[colorOffset + 18] = b;
+	colors[colorOffset + 19] = alpha;
+	
+	colors[colorOffset + 20] = r;
+	colors[colorOffset + 21] = g;
+	colors[colorOffset + 22] = b;
+	colors[colorOffset + 23] = alpha;
+	
+	//----------------------------------------------
+	
+	numSprites[layer]++;
+	
+	return true;	
 }
 
 void ofxSpriteSheetRenderer::update(unsigned long time)
