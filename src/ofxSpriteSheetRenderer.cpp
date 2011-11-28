@@ -96,7 +96,27 @@ void ofxSpriteSheetRenderer::clearTexture()
 		}
 	}
 }
-
+void ofxSpriteSheetRenderer::allocate(int width, int height, int internalGLScaleMode)
+{
+	if(texture == NULL)
+	{
+		tileSize_f = tileSize;
+#ifdef TARGET_OPENGLES	// if we don't have arb, it's crazy important that things are power of 2 so that this float is set properly
+		tileSize_f /= width;
+#endif
+		sheetSize = width;
+		
+		spriteSheetWidth = width/tileSize;
+		
+		CollageTexture * newTexture = new CollageTexture();
+		
+		newTexture->allocate(width, height, GL_RGBA, internalGLScaleMode);
+		
+		texture = (ofTexture*) newTexture;
+	}
+	else
+		cerr<<"cannot double allocate ofxSpriteSheetRenderer Texture! Please clearTexture() first"<<endl;
+}
 void ofxSpriteSheetRenderer::allocate(int widthHeight, int internalGLScaleMode)
 {
 	if(texture == NULL)
@@ -130,15 +150,19 @@ void ofxSpriteSheetRenderer::finishTexture()
 	CollageTexture *cTexture = dynamic_cast<CollageTexture*>(texture);
 	cTexture->finish();
 }
-
-void ofxSpriteSheetRenderer::loadTexture(string fileName, int widthHeight, int internalGLScaleMode)
+void ofxSpriteSheetRenderer::loadTexture(string fileName, int width, int height, int internalGLScaleMode)
 {
-	clearTexture();
+    clearTexture();
 	clear();
-	allocate(widthHeight, internalGLScaleMode);
+	allocate(width, height, internalGLScaleMode);
 	addMisc(fileName, 0, 0);
 	finishTexture();
 	textureIsExternal = false;
+}
+
+void ofxSpriteSheetRenderer::loadTexture(string fileName, int widthHeight, int internalGLScaleMode)
+{
+    loadTexture(fileName, widthHeight, widthHeight, internalGLScaleMode);
 }
 
 void ofxSpriteSheetRenderer::loadTexture(ofTexture * _texture)
@@ -415,7 +439,7 @@ bool ofxSpriteSheetRenderer::addCenteredTile(int tile_name, int frame, float x, 
 	w/=2;
 	h*=tileSize*scale;
 	h/=2;
-	
+	    
 	//verticies ------------------------------------
 	verts[vertexOffset     ] = x-w; //ul ur ll
 	verts[vertexOffset + 1 ] = y-h;
@@ -560,7 +584,12 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(float tex_x, float tex_y, floa
 	urRot*=2;
 	llRot*=2;
 	lrRot*=2;
-	
+
+    w = floor(w);
+    h = floor(h);
+    x = floor(x);
+    y = floor(y);
+
 	//verticies ------------------------------------
 	verts[vertexOffset     ] = x+w*ul[ulRot  ]; //ul ur ll
 	verts[vertexOffset + 1 ] = y+h*ul[ulRot+1];

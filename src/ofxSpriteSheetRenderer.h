@@ -80,6 +80,7 @@ public:
 	void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize);
 	
 	void loadTexture(string fileName, int widthHeight, int internalGLScaleMode);
+	void loadTexture(string fileName, int width, int height, int internalGLScaleMode);
 	void loadTexture(ofTexture * _texture);
 	void loadTexture(CollageTexture * _texture);
 	void loadTexture(PixelTexture * _texture);
@@ -109,6 +110,8 @@ protected:
 	// texture creation ------------------------
 	
 	void allocate(int widthHeight, int internalGLScaleMode);
+    void allocate(int width, int height, int internalGLScaleMode);
+
 	void clearTexture();
 	
 	void addMisc(string fileName, int x, int y, int glType=GL_RGBA);
