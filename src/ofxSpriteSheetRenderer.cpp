@@ -108,7 +108,7 @@ void ofxSpriteSheetRenderer::allocate(int width, int height, int internalGLScale
 		
 		spriteSheetWidth = width/tileSize;
 		
-		CollageTexture * newTexture = new CollageTexture();
+		LinearTexture * newTexture = new LinearTexture();
 		
 		newTexture->allocate(width, height, GL_RGBA, internalGLScaleMode);
 		
@@ -171,6 +171,8 @@ void ofxSpriteSheetRenderer::loadTexture(ofTexture * _texture)
 	clearTexture();
 	textureIsExternal = true;
 	texture = _texture;
+    sheetSize = texture->getWidth();
+    spriteSheetWidth = texture->getWidth();
 }
 
 void ofxSpriteSheetRenderer::loadTexture(CollageTexture * _texture){
@@ -778,10 +780,11 @@ void ofxSpriteSheetRenderer::draw()
 	
 	texture->bind();
 	for(int i = 0; i < numLayers; i++)
-		if(numSprites[i] > 0)
+		if(numSprites[i] > 0){
 			glDrawArrays(GL_TRIANGLES, i*tilesPerLayer*6, numSprites[i]*6);
+//            cout << "number of sprites: " << numSprites[i] << " on layer: "  << i << endl;
+        }
 	texture->unbind();
-	
 	if(safeMode)
 	{
 		glDisableClientState(GL_VERTEX_ARRAY);
