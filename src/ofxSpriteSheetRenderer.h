@@ -44,6 +44,16 @@ typedef struct {
 	float w;                      //								how many tiles right of the index are included
 	float h;                      //								how many tiles down from the index are included
 	
+	float tex_y;					// how much offset from the top left of the sheet the texture is (no longer using the index for lookups)
+	float tex_x;					// doing it this way so that we can have differently sized textures
+	float tex_w;					// how big the texture is (on the sheet)
+	float tex_h;
+	
+	float sprite_x;					// how far offset the display of the sprite should be from the requested display position (how much alpha got trimmed when packing the sprite)
+	float sprite_y;
+	float spritesource_w;			// the size of the sprite before the alpha trimming took place
+	float spritesource_h;			// used for doing rotations around the center of the sprite (maybe, used for nothing for now)		
+	
 	unsigned int frame_duration;  //								how many milliseconds each frame should be on screen. less = faster animation.
 	unsigned long next_tick;      // DEFAULT SHOULD BE SET TO 0.	when in gametime the frame should be changed. updated automatically.
 	
@@ -70,6 +80,7 @@ public:
 	void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize);
 	
 	void loadTexture(string fileName, int widthHeight, int internalGLScaleMode);
+	void loadTexture(string fileName, int width, int height, int internalGLScaleMode);
 	void loadTexture(ofTexture * _texture);
 	void loadTexture(CollageTexture * _texture);
 	void loadTexture(PixelTexture * _texture);
@@ -82,11 +93,13 @@ public:
 	bool addTile             (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, float scale = 1.0,          int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenterRotatedTile(animation_t* sprite,         float x, float y, int layer = -1, float wh = 1,          flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
+	bool addCornerTile       (animation_t* sprite,         ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4,			int layer = -1, int r=255, int g=255, int b=255, int alpha=255);
 	
-	bool addTile             (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
+	bool addTile             (float tex_x, float tex_y, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255);
-	bool addCenterRotatedTile(int tile_name, int frame, float x, float y, int layer = -1, float wh = 1,             flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255);
-	
+	bool addCenterRotatedTile(float tex_x, float tex_y, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255);
+	bool addCornerTile       (float tex_x, float tex_y, ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer = -1, float w = 1, float h = 1, int r=255, int g=255, int b=255, int alpha=255);
+
 	void update(unsigned long time);
 	void draw();
 	
@@ -97,6 +110,8 @@ protected:
 	// texture creation ------------------------
 	
 	void allocate(int widthHeight, int internalGLScaleMode);
+    void allocate(int width, int height, int internalGLScaleMode);
+
 	void clearTexture();
 	
 	void addMisc(string fileName, int x, int y, int glType=GL_RGBA);
@@ -122,7 +137,9 @@ protected:
 	int defaultLayer;
 	int tilesPerLayer;
 	int tileSize;
-	
+	int sheetSize;
+	int sheetSize_y;
+    int sheetSize_x;
 	unsigned long gameTime;
 	
 	float * verts;
@@ -131,11 +148,12 @@ protected:
 	
 	int * numSprites;
 	int spriteSheetWidth;
-	
-	char ul[720];
-	char ur[720];
-	char ll[720];
-	char lr[720];
+	int spriteSheetHeight;
+    
+	float ul[720];
+	float ur[720];
+	float ll[720];
+	float lr[720];
 };
 
 #endif

@@ -55,16 +55,6 @@ void CollageTexture::allocate(int w, int h, int internalGlDataType, int internal
 		
 	c_type = internalGlDataType;
 	
-	//our graphics card might not support arb so we have to see if it is supported.
-#ifndef TARGET_OPENGLES
-	if (bUseARBExtention && GL_ARB_texture_rectangle){
-		texData.tex_w = w;
-		texData.tex_h = h;
-		texData.tex_t = w;
-		texData.tex_u = h;
-		texData.textureTarget = GL_TEXTURE_RECTANGLE_ARB;
-	} else 
-#endif
 	{
 		//otherwise we need to calculate the next power of 2 for the requested dimensions
 		//ie (320x240) becomes (512x256)
@@ -80,24 +70,6 @@ void CollageTexture::allocate(int w, int h, int internalGlDataType, int internal
 	
 	// MEMO: todo, add more types
 	switch(texData.glTypeInternal) {
-#ifndef TARGET_OPENGLES	
-		case GL_RGBA32F_ARB:
-		case GL_RGBA16F_ARB:
-			texData.glType		= GL_RGBA;
-			texData.pixelType	= GL_FLOAT;
-			break;
-			
-		case GL_RGB32F_ARB:
-			texData.glType		= GL_RGB;
-			texData.pixelType	= GL_FLOAT;
-			break;
-			
-		case GL_LUMINANCE32F_ARB:
-			texData.glType		= GL_LUMINANCE;
-			texData.pixelType	= GL_FLOAT;
-			break;
-#endif			
-			
 		default:
 			texData.glType		= GL_LUMINANCE;
 			texData.pixelType	= GL_UNSIGNED_BYTE;
