@@ -138,7 +138,8 @@ protected:
 	int tilesPerLayer;
 	int tileSize;
 	int sheetSize;
-	
+	int sheetSize_y;
+    int sheetSize_x;
 	unsigned long gameTime;
 	
 	float * verts;
@@ -147,7 +148,8 @@ protected:
 	
 	int * numSprites;
 	int spriteSheetWidth;
-	
+	int spriteSheetHeight;
+    
 	float ul[720];
 	float ur[720];
 	float ll[720];

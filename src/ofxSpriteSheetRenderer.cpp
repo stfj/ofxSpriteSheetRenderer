@@ -105,9 +105,10 @@ void ofxSpriteSheetRenderer::allocate(int width, int height, int internalGLScale
 		tileSize_f /= width;
 #endif
 		sheetSize = width;
-		
+        
 		spriteSheetWidth = width/tileSize;
-		
+        spriteSheetHeight = height/tileSize;
+        
 		LinearTexture * newTexture = new LinearTexture();
 		
 		newTexture->allocate(width, height, GL_RGBA, internalGLScaleMode);
@@ -173,6 +174,7 @@ void ofxSpriteSheetRenderer::loadTexture(ofTexture * _texture)
 	texture = _texture;
     sheetSize = texture->getWidth();
     spriteSheetWidth = texture->getWidth();
+    spriteSheetHeight = texture->getHeight();
 }
 
 void ofxSpriteSheetRenderer::loadTexture(CollageTexture * _texture){
@@ -327,8 +329,8 @@ bool ofxSpriteSheetRenderer::addTile(float tex_x, float tex_y, float x, float y,
 	int vertexOffset = (layerOffset + numSprites[layer])*18;
 	int colorOffset = (layerOffset + numSprites[layer])*24;
 
-	frameX /= sheetSize;
-	frameY /= sheetSize;
+	frameX /= spriteSheetWidth;
+	frameY /= spriteSheetHeight;
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
 		
@@ -540,8 +542,8 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(float tex_x, float tex_y, floa
 	int vertexOffset = (layerOffset + numSprites[layer])*18;
 	int colorOffset = (layerOffset + numSprites[layer])*24;
 	
-	frameX /= sheetSize;
-	frameY /= sheetSize;
+	frameX /= spriteSheetWidth;
+	frameY /= spriteSheetHeight;
 	//	w /= sheetSize;
 	//	h /= sheetSize;
 	
@@ -687,8 +689,8 @@ bool ofxSpriteSheetRenderer::addCornerTile(float tex_x, float tex_y,  ofPoint p1
 	int vertexOffset = (layerOffset + numSprites[layer])*18;
 	int colorOffset = (layerOffset + numSprites[layer])*24;
 	
-	frameX /= sheetSize;
-	frameY /= sheetSize;
+	frameX /= spriteSheetWidth;
+	frameY /= spriteSheetHeight;
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
 	
@@ -797,8 +799,8 @@ void ofxSpriteSheetRenderer::addTexCoords(flipDirection f, float &frameX, float 
 {
 	int layerOffset = layer*tilesPerLayer;
 	int coordOffset = (layerOffset + numSprites[layer])*12;
-	w /= sheetSize;
-	h /= sheetSize;
+	w /= spriteSheetWidth;
+	h /= spriteSheetHeight;
 	
 	switch (f) {
 		case F_NONE:
@@ -896,7 +898,7 @@ void ofxSpriteSheetRenderer::addTexCoords(flipDirection f, float &frameX, float 
 
 void ofxSpriteSheetRenderer::getFrameXandY(int tile_position, float &x, float &y)
 {
-	y = (tile_position / spriteSheetWidth);
+	y = (tile_position / spriteSheetHeight);
 	x = (tile_position - y * spriteSheetWidth);
 	
 	x*=tileSize_f;
