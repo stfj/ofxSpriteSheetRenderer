@@ -30,8 +30,17 @@ class testApp : public ofBaseApp{
 	
 	int vert;
 	
+	int TILESIZE;
 	
 	void drawGrid();
+	
+	int makingSprite;
+	
+	ofPoint spriteStart;
+	int startIndex;
+	int ww;
+	int hh;
+	int numFrames;
 };
 
 #endif

@@ -1,5 +1,7 @@
 /***********************************************************************
  
+ version 2.0
+ 
  Copyright (C) 2011 by Zach Gage and Ramsey Nasser
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -52,6 +54,13 @@ typedef struct {
 	int frame_skip;				 //	 DEFAULT SHOULD BE SET TO 1.	the inverval by which frames are moved between. Generally this should be 1, but could be set to -1 if you wanted the animation to play backwards for example
 } animation_t;
 
+typedef struct {
+	ofPoint UL;
+	ofPoint UR;
+	ofPoint LL;
+	ofPoint LR;
+} CollisionBox_t;
+
 
 extern unsigned long gameTime;
 
@@ -77,23 +86,61 @@ public:
 	
 	// -----------------------------------------
 	
+	int brushIndex;
+	float brushX;
+	float brushY;
+	
+	int shapeR;
+	int shapeG;
+	int shapeB;
+	int shapeA;
+	
+	int	numCirclePts;
+	float circlePts[OF_MAX_CIRCLE_PTS*2];
+	
+	void setBrushIndex(int index, int wh=1);
+	float brushSize;
+	float halfBrushSize;
+	void setShapeColor(int r, int g, int b, int a=255);
+	void setCircleResolution(int resolution);
+	
+	
+	//shapes (require a brushTexture to be on the sprite sheet)
+	bool addLine(ofVec2f a, ofVec2f b, int width, int layer=-1, bool capped = true);
+	bool addCircle(float x, float y, float z, float radius, int width, bool filled, int layer=-1);
+	bool addRect(float x, float y, float z, float w, float h, int layer=-1);
+	bool addCenteredRect(float x, float y, float z, float w, float h, int layer=-1);
+	
+	// -----------------------------------------
+	
 	void clear(int layer=-1);
 	
 	bool addTile             (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
+	bool addRotatedTile(animation_t* sprite, float x, float y, float rX, float rY, int layer = -1,     flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
+	
 	bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, float scale = 1.0,          int r=255, int g=255, int b=255, int alpha=255);
-	bool addCenterRotatedTile(animation_t* sprite,         float x, float y, int layer = -1, float wh = 1,          flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
+	bool addCenterRotatedTile(animation_t* sprite, float x, float y, int layer = -1,     flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
 	
 	bool addTile             (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
-	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255);
-	bool addCenterRotatedTile(int tile_name, int frame, float x, float y, int layer = -1, float wh = 1,             flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255);
 	
+	bool addRotatedTile(int tile_name, int frame, float x, float y, float rX, float rY, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255);
+	
+	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255);
+	bool addCenterRotatedTile(int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255);
+		
 	void update(unsigned long time);
-	void draw();
+	void draw(int startLayer = 0, int endLayer = -1);
+	
+	int getSpriteSheetWidth(){
+		return spriteSheetWidth;
+	};
+	
+	int getTileSize(){
+		return tileSize;
+	};
 	
 	bool safeMode;
-	
-protected:
-	
+		
 	// texture creation ------------------------
 	
 	void allocate(int widthHeight, int internalGLScaleMode);
@@ -104,14 +151,16 @@ protected:
 	void finishTexture();
 	
 	// -----------------------------------------
-	
-	void generateRotationArrays();
+
+	protected:
 	
 	void getFrameXandY(int tile_position, float &x, float &y);
 	
+	float getX(int x, int y, int angle);
+	float getY(int x, int y, int angle);
+	
 	void addTexCoords(flipDirection f, float &frameX, float &frameY, int layer, float x=1, float y=1);
-	
-	
+		
 	float tileSize_f;
 	
 	bool textureIsExternal;
@@ -131,11 +180,6 @@ protected:
 	
 	int * numSprites;
 	int spriteSheetWidth;
-	
-	char ul[720];
-	char ur[720];
-	char ll[720];
-	char lr[720];
 };
 
 #endif
