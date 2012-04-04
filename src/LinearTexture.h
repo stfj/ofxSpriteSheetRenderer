@@ -41,6 +41,7 @@ public:
 	void allocate(int w, int h, int internalGlDataType, bool bUseARBExtention);
 	
 	void loadTexture(string textureName, int glType=GL_RGBA);
+    void loadTextureFromPVR(string textureName, int glType=GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG);
 };
 
 #endif

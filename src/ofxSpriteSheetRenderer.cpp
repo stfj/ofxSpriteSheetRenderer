@@ -1,3 +1,4 @@
+
 /***********************************************************************
  
  Copyright (C) 2011 by Zach Gage and Ramsey Nasser
@@ -293,11 +294,11 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(animation_t* sprite, float x, 
 	return addCenterRotatedTile(sprite->tex_x, sprite->tex_y, x, y, layer, sprite->tex_w, sprite->tex_h, f, scale, rot, r, g, b, alpha);
 
 }
-bool ofxSpriteSheetRenderer::addCornerTile(animation_t* sprite, ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, int r, int g, int b, int alpha)
+bool ofxSpriteSheetRenderer::addCornerTile(animation_t* sprite, ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, flipDirection f, int r, int g, int b, int alpha)
 {
 	if(layer==-1)
 		layer=defaultLayer;
-	return addCornerTile(sprite->tex_x, sprite->tex_y, p1, p2, p3, p4, layer, sprite->tex_w, sprite->tex_h, r, g, b, alpha);
+	return addCornerTile(sprite->tex_x, sprite->tex_y, p1, p2, p3, p4, layer, f, sprite->tex_w, sprite->tex_h, r, g, b, alpha);
 }
 
 bool ofxSpriteSheetRenderer::addTile(float tex_x, float tex_y, float x, float y, int layer, float w, float h, flipDirection f, int r, int g, int b, int alpha)
@@ -659,9 +660,9 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(float tex_x, float tex_y, floa
 	
 	return true;
 }
-bool ofxSpriteSheetRenderer::addCornerTile(float tex_x, float tex_y,  ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, float w, float h, int r, int g, int b, int alpha)
+bool ofxSpriteSheetRenderer::addCornerTile(float tex_x, float tex_y,  ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, flipDirection f, float w, float h, int r, int g, int b, int alpha)
 {
-	flipDirection f = F_NONE;
+	//flipDirection f = F_NONE;
 	if(layer==-1)
 		layer=defaultLayer;
 	

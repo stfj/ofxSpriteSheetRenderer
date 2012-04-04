@@ -93,12 +93,12 @@ public:
 	bool addTile             (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, float scale = 1.0,          int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenterRotatedTile(animation_t* sprite,         float x, float y, int layer = -1, float wh = 1,          flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
-	bool addCornerTile       (animation_t* sprite,         ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4,			int layer = -1, int r=255, int g=255, int b=255, int alpha=255);
+	bool addCornerTile       (animation_t* sprite,         ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4,			int layer = -1, flipDirection f= F_NONE, int r=255, int g=255, int b=255, int alpha=255);
 	
 	bool addTile             (float tex_x, float tex_y, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenterRotatedTile(float tex_x, float tex_y, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255);
-	bool addCornerTile       (float tex_x, float tex_y, ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer = -1, float w = 1, float h = 1, int r=255, int g=255, int b=255, int alpha=255);
+	bool addCornerTile       (float tex_x, float tex_y, ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer = -1, flipDirection f= F_NONE, float w = 1, float h = 1, int r=255, int g=255, int b=255, int alpha=255);
 
 	void update(unsigned long time);
 	void draw();

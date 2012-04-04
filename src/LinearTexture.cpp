@@ -34,7 +34,10 @@ void LinearTexture::loadTexture(string textureName, int glType)
 	
 	loader.clear();
 }
-
+void LinearTexture::loadTextureFromPVR(string textureName, int glType)
+{
+    
+}
 void LinearTexture::allocate(int w, int h, int internalGlDataType){
 	allocate(w, h, internalGlDataType, ofGetUsingArbTex());
 }
