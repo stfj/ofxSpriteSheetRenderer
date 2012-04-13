@@ -300,6 +300,12 @@ bool ofxSpriteSheetRenderer::addCornerTile(animation_t* sprite, ofPoint p1, ofPo
 		layer=defaultLayer;
 	return addCornerTile(sprite->tex_x, sprite->tex_y, p1, p2, p3, p4, layer, f, sprite->tex_w, sprite->tex_h, r, g, b, alpha);
 }
+bool ofxSpriteSheetRenderer::addCornerColorTile(animation_t* sprite, ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4,			int layer, flipDirection f, ofColor c1, ofColor c2, ofColor c3, ofColor c4)
+{
+	if(layer==-1)
+		layer=defaultLayer;
+	return addCornerColorTile(sprite->tex_x, sprite->tex_y, p1, p2, p3, p4, layer, f, sprite->tex_w, sprite->tex_h, c1, c2, c3, c4);
+}
 
 bool ofxSpriteSheetRenderer::addTile(float tex_x, float tex_y, float x, float y, int layer, float w, float h, flipDirection f, int r, int g, int b, int alpha)
 {
@@ -694,7 +700,13 @@ bool ofxSpriteSheetRenderer::addCornerTile(float tex_x, float tex_y,  ofPoint p1
 	frameY /= spriteSheetHeight;
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
-	
+
+	/*
+     cout << "START: " << p1 << endl;
+	cout << p2 << endl;
+	cout << p3 << endl;
+	cout << p4 << endl;
+    */
 	//verticies ------------------------------------
 	verts[vertexOffset     ] = p1.x; //tl
 	verts[vertexOffset + 1 ] = p1.y;
@@ -755,6 +767,114 @@ bool ofxSpriteSheetRenderer::addCornerTile(float tex_x, float tex_y,  ofPoint p1
 	colors[colorOffset + 21] = g;
 	colors[colorOffset + 22] = b;
 	colors[colorOffset + 23] = alpha;
+	
+	//----------------------------------------------
+	
+	numSprites[layer]++;
+	
+	return true;	
+}
+bool ofxSpriteSheetRenderer::addCornerColorTile(float tex_x, float tex_y,  ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, flipDirection f, float w, float h, ofColor c1, ofColor c2, ofColor c3, ofColor c4)
+{
+	//flipDirection f = F_NONE;
+	if(layer==-1)
+		layer=defaultLayer;
+	
+	if(texture == NULL)
+	{
+		cerr << "RENDER ERROR: No texture loaded!"  << endl;
+		return false;
+	}
+	
+	if(numSprites[layer] >= tilesPerLayer)
+	{
+		cerr << "RENDER ERROR: Layer " << layer << " over allocated! Max " << tilesPerLayer << " sprites per layer!"  << endl;
+		return false;
+	}
+	
+	if(layer > numLayers)
+	{
+		cerr << "RENDER ERROR: Bogus layer '" << layer << "'! Only " << numLayers << " layers compiled!"  << endl;
+		return false;
+	}
+	
+	float frameX = tex_x;
+	float frameY = tex_y;
+	int layerOffset = layer*tilesPerLayer;
+	int vertexOffset = (layerOffset + numSprites[layer])*18;
+	int colorOffset = (layerOffset + numSprites[layer])*24;
+	
+	frameX /= spriteSheetWidth;
+	frameY /= spriteSheetHeight;
+	
+	addTexCoords(f, frameX, frameY, layer, w, h);
+    
+	/*
+     cout << "START: " << p1 << endl;
+     cout << p2 << endl;
+     cout << p3 << endl;
+     cout << p4 << endl;
+     */
+	//verticies ------------------------------------
+	verts[vertexOffset     ] = p1.x; //tl
+	verts[vertexOffset + 1 ] = p1.y;
+	verts[vertexOffset + 2 ] = 0;
+	
+	verts[vertexOffset + 3 ] = p2.x; //tr
+	verts[vertexOffset + 4 ] = p2.y;
+	verts[vertexOffset + 5 ] = 0;
+	
+	verts[vertexOffset + 6 ] = p4.x;	//bl
+	verts[vertexOffset + 7 ] = p4.y;
+	verts[vertexOffset + 8 ] = 0;
+	
+	
+	
+	verts[vertexOffset + 9 ] = p2.x; //tr
+	verts[vertexOffset + 10] = p2.y;
+	verts[vertexOffset + 11] = 0;
+	
+	verts[vertexOffset + 12] = p4.x;	//bl
+	verts[vertexOffset + 13] = p4.y;
+	verts[vertexOffset + 14] = 0;
+	
+	verts[vertexOffset + 15] = p3.x; //br
+	verts[vertexOffset + 16] = p3.y;
+	verts[vertexOffset + 17] = 0;
+	
+	//colors ---------------------------------------
+	
+	colors[colorOffset	 ]   = c1.r;
+	colors[colorOffset + 1 ] = c1.g;
+	colors[colorOffset + 2 ] = c1.b;
+	colors[colorOffset + 3 ] = c1.a;
+	
+	colors[colorOffset + 4 ] = c2.r;
+	colors[colorOffset + 5 ] = c2.g;
+	colors[colorOffset + 6 ] = c2.b;
+	colors[colorOffset + 7 ] = c2.a;
+	
+	colors[colorOffset + 8 ] = c4.r;
+	colors[colorOffset + 9 ] = c4.g;
+	colors[colorOffset + 10] = c4.b;
+	colors[colorOffset + 11] = c4.a;
+	
+	
+	
+	colors[colorOffset + 12] = c2.r;
+	colors[colorOffset + 13] = c2.g;
+	colors[colorOffset + 14] = c2.b;
+	colors[colorOffset + 15] = c2.a;
+	
+	colors[colorOffset + 16] = c4.r;
+	colors[colorOffset + 17] = c4.g;
+	colors[colorOffset + 18] = c4.b;
+	colors[colorOffset + 19] = c4.a;
+	
+	colors[colorOffset + 20] = c3.r;
+	colors[colorOffset + 21] = c3.g;
+	colors[colorOffset + 22] = c3.b;
+	colors[colorOffset + 23] = c3.a;
 	
 	//----------------------------------------------
 	

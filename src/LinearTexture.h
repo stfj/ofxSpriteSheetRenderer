@@ -32,6 +32,10 @@
 #ifndef OFX_LINEAR_TEXTURE_H
 #define OFX_LINEAR_TEXTURE_H
 
+#ifndef GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG
+#define GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG NULL
+#endif
+
 #include "ofMain.h"
 
 class LinearTexture : public ofTexture
