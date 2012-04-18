@@ -298,12 +298,36 @@ bool ofxSpriteSheetRenderer::addCornerTile(animation_t* sprite, ofPoint p1, ofPo
 {
 	if(layer==-1)
 		layer=defaultLayer;
+    /*
+    float alphaMult = alpha/255;
+    r *= alphaMult;
+    g *= alphaMult;
+    b *= alphaMult;
+     */
 	return addCornerTile(sprite->tex_x, sprite->tex_y, p1, p2, p3, p4, layer, f, sprite->tex_w, sprite->tex_h, r, g, b, alpha);
 }
 bool ofxSpriteSheetRenderer::addCornerColorTile(animation_t* sprite, ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4,			int layer, flipDirection f, ofColor c1, ofColor c2, ofColor c3, ofColor c4)
 {
 	if(layer==-1)
 		layer=defaultLayer;
+    /*
+    float c1alphaMult = c1.a/255;
+    c1.r *= c1alphaMult;
+    c1.g *= c1alphaMult;
+    c1.b *= c1alphaMult;
+    float c2alphaMult = c2.a/255;
+    c2.r *= c2alphaMult;
+    c2.g *= c2alphaMult;
+    c2.b *= c2alphaMult;
+    float c4alphaMult = c4.a/255;
+    c4.r *= c4alphaMult;
+    c4.g *= c4alphaMult;
+    c4.b *= c4alphaMult;
+    float c3alphaMult = c3.a/255;
+    c3.r *= c3alphaMult;
+    c3.g *= c3alphaMult;
+    c3.b *= c3alphaMult;
+    */
 	return addCornerColorTile(sprite->tex_x, sprite->tex_y, p1, p2, p3, p4, layer, f, sprite->tex_w, sprite->tex_h, c1, c2, c3, c4);
 }
 
