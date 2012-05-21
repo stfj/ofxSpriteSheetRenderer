@@ -51,7 +51,7 @@ void LinearTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBE
 		texData.tex_h = h;
 		texData.tex_t = w;
 		texData.tex_u = h;
-		texData.textureTarget = GL_TEXTURE_RECTANGLE_ARB;
+		//texData.textureTarget = GL_TEXTURE_RECTANGLE_ARB;
 	} else 
 #endif
 	{
@@ -102,19 +102,11 @@ void LinearTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBE
 	glBindTexture(texData.textureTarget, (GLuint)texData.textureID);
 	
 	glTexParameterf(texData.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(texData.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_S, GL_LINEAR);
-	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_T, GL_LINEAR);
-	
-#ifndef TARGET_OPENGLES
-	// can't do this on OpenGL ES: on full-blown OpenGL, 
-	// internalGlDataType and glDataType (GL_LUMINANCE below)
-	// can be different; on ES they must be exactly the same.
-	//		glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, (GLint)texData.tex_w, (GLint)texData.tex_h, 0, GL_LUMINANCE, PIXEL_TYPE, 0);  // init to black...
-	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, (GLint)texData.tex_w, (GLint)texData.tex_h, 0, texData.glType, texData.pixelType, 0);  // init to black...
-#else
-	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, texData.tex_w, texData.tex_h, 0, texData.glTypeInternal, GL_UNSIGNED_BYTE, 0);
-#endif
+	glTexParameterf(texData.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(texData.textureTarget, GL_GENERATE_MIPMAP, GL_TRUE);
+    glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, texData.tex_w, texData.tex_h, 0, texData.glTypeInternal, GL_UNSIGNED_BYTE, 0);
 	
 	
 	

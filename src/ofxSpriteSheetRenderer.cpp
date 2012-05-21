@@ -102,9 +102,7 @@ void ofxSpriteSheetRenderer::allocate(int width, int height, int internalGLScale
 	if(texture == NULL)
 	{
 		tileSize_f = tileSize;
-#ifdef TARGET_OPENGLES	// if we don't have arb, it's crazy important that things are power of 2 so that this float is set properly
 		tileSize_f /= width;
-#endif
 		sheetSize = width;
         
 		spriteSheetWidth = width/tileSize;
@@ -124,9 +122,7 @@ void ofxSpriteSheetRenderer::allocate(int widthHeight, int internalGLScaleMode)
 	if(texture == NULL)
 	{
 		tileSize_f = tileSize;
-#ifdef TARGET_OPENGLES	// if we don't have arb, it's crazy important that things are power of 2 so that this float is set properly
 		tileSize_f /= widthHeight;
-#endif
 		sheetSize = widthHeight;
 		
 		spriteSheetWidth = widthHeight/tileSize;
