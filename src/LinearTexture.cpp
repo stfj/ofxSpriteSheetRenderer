@@ -98,16 +98,38 @@ void LinearTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBE
 	glGenTextures(1, (GLuint *)&texData.textureID);   // could be more then one, but for now, just one
 	
 	glEnable(texData.textureTarget);
-	
+    GLenum err;
+
 	glBindTexture(texData.textureTarget, (GLuint)texData.textureID);
-	
-	glTexParameterf(texData.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(texData.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(texData.textureTarget, GL_GENERATE_MIPMAP, GL_TRUE);
+
+    err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        cout << "1Error setting up texture " << err << endl;
+    }
+
 	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(texData.textureTarget, GL_GENERATE_MIPMAP, GL_TRUE);
     glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, texData.tex_w, texData.tex_h, 0, texData.glTypeInternal, GL_UNSIGNED_BYTE, 0);
-	
+    err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        cout << "2Error setting up texture " << err << endl;
+    }
+	glTexParameterf(texData.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        cout << "3Error setting up texture " << err << endl;
+    }
+	glTexParameterf(texData.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        cout << "4Error setting up texture " << err << endl;
+    }
+
 	
 	
 	
