@@ -24,15 +24,15 @@
  ************************************************************************/ 
 
 #include "ofxSpriteSheetRenderer.h"
+int ofxSpriteSheetRenderer::polyCount = 0;
+int ofxSpriteSheetRenderer::polyCountFrame = 0;
 
 ofxSpriteSheetRenderer::ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize)
 {
 	texture = NULL;
-	verts = NULL;
-	coords = NULL;
-	colors = NULL;
 	numSprites = NULL;
-	
+	points = NULL;
+    
 	textureIsExternal = false;
 	
 	safeMode = true;
@@ -42,6 +42,7 @@ ofxSpriteSheetRenderer::ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLaye
 	reAllocateArrays(_numLayers, _tilesPerLayer, _defaultLayer, _tileSize);
 	
 	generateRotationArrays();
+    screen.set(0, 0, ofGetWidth(), ofGetHeight());
 }
 
 ofxSpriteSheetRenderer::~ofxSpriteSheetRenderer()
@@ -49,14 +50,10 @@ ofxSpriteSheetRenderer::~ofxSpriteSheetRenderer()
 	if(texture != NULL && textureIsExternal)
 		texture->clear();
 	
-	if(verts != NULL)
-		delete[] verts;
-	if(coords != NULL)
-		delete[] coords;
-	if(colors != NULL)
-		delete[] colors;
 	if(numSprites != NULL)
 		delete[] numSprites;
+    if(points != NULL)
+        delete[] points;
 }
 
 void ofxSpriteSheetRenderer::reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize)
@@ -66,20 +63,14 @@ void ofxSpriteSheetRenderer::reAllocateArrays(int _numLayers, int _tilesPerLayer
 	tilesPerLayer = _tilesPerLayer;
 	defaultLayer = _defaultLayer;
 	
-	if(verts != NULL)
-		delete[] verts;
-	if(coords != NULL)
-		delete[] coords;
-	if(colors != NULL)
-		delete[] colors;
+	if(points != NULL)
+		delete[] points;
 	if(numSprites != NULL)
 		delete[] numSprites;
 	
-	verts = new float[numLayers*tilesPerLayer*18];
-	coords = new float[numLayers*tilesPerLayer*12];
-	colors = new unsigned char[numLayers*tilesPerLayer*24];
-	numSprites = new int[numLayers];
-	
+	numSprites = new int[numLayers];	
+    points = new vertexStruct[numLayers * tilesPerLayer * 6];
+    
 	clear();
 	clearTexture();
 }
@@ -259,33 +250,9 @@ bool ofxSpriteSheetRenderer::addCenteredTile(animation_t* sprite, float x, float
 }
 
 bool ofxSpriteSheetRenderer::addCenterRotatedTile(animation_t* sprite, float x, float y, int layer, float wh, flipDirection f, float scale, int rot, int r, int g, int b, int alpha){
-	int index, frame;
-	
 	if(layer==-1)
 		layer=defaultLayer;
-	
-	// animation
-	if(sprite->total_frames > 1)
-		// still animating
-		if(sprite->loops != 0)
-			// time to advance frame
-			if(gameTime > sprite->next_tick) {
-				sprite->frame += sprite->frame_skip;
-				// increment frame and keep it within range
-				if(sprite->frame < 0) sprite->frame = sprite->total_frames;
-				if(sprite->frame >= sprite->total_frames) sprite->frame = 0;
-				sprite->next_tick = gameTime + sprite->frame_duration;
-				// decrement loop count if cycle complete
-				if( ((sprite->frame_skip > 0 && sprite->frame == sprite->total_frames-1) || (sprite->frame_skip < 0 && sprite->frame == 0)) && sprite->loops > 0) sprite->loops--;
-			}
-	
-	if(sprite->loops == 0 && sprite->final_index >= 0) {
-		index = sprite->final_index;
-		frame = 0;
-	} else {
-		index = sprite->index;
-		frame = sprite->frame;
-	}
+
 	// we are no longer handling the animation system in the tile renderer, so we are going to pass x y coords rather than indexes to the next object
 	return addCenterRotatedTile(sprite->tex_x, sprite->tex_y, x, y, layer, sprite->tex_w, sprite->tex_h, f, scale, rot, r, g, b, alpha);
 
@@ -306,286 +273,72 @@ bool ofxSpriteSheetRenderer::addCornerColorTile(animation_t* sprite, ofPoint p1,
 {
 	if(layer==-1)
 		layer=defaultLayer;
-    /*
-    float c1alphaMult = c1.a/255;
-    c1.r *= c1alphaMult;
-    c1.g *= c1alphaMult;
-    c1.b *= c1alphaMult;
-    float c2alphaMult = c2.a/255;
-    c2.r *= c2alphaMult;
-    c2.g *= c2alphaMult;
-    c2.b *= c2alphaMult;
-    float c4alphaMult = c4.a/255;
-    c4.r *= c4alphaMult;
-    c4.g *= c4alphaMult;
-    c4.b *= c4alphaMult;
-    float c3alphaMult = c3.a/255;
-    c3.r *= c3alphaMult;
-    c3.g *= c3alphaMult;
-    c3.b *= c3alphaMult;
-    */
 	return addCornerColorTile(sprite->tex_x, sprite->tex_y, p1, p2, p3, p4, layer, f, sprite->tex_w, sprite->tex_h, c1, c2, c3, c4);
 }
 
 bool ofxSpriteSheetRenderer::addTile(float tex_x, float tex_y, float x, float y, int layer, float w, float h, flipDirection f, int r, int g, int b, int alpha)
 {
-	if(layer==-1)
-		layer=defaultLayer;
-	
-	if(texture == NULL)
-	{
-		cerr << "RENDER ERROR: No texture loaded!"  << endl;
-		return false;
-	}
-	
-	if(numSprites[layer] >= tilesPerLayer)
-	{
-		cerr << "RENDER ERROR: Layer " << layer << " over allocated! Max " << tilesPerLayer << " sprites per layer!"  << endl;
-		return false;
-	}
-	
-	if(layer > numLayers)
-	{
-		cerr << "RENDER ERROR: Bogus layer '" << layer << "'! Only " << numLayers << " layers compiled!"  << endl;
-		return false;
-	}
-	
-	float frameX = tex_x;
-	float frameY = tex_y;
-	int layerOffset = layer*tilesPerLayer;
-	int vertexOffset = (layerOffset + numSprites[layer])*18;
-	int colorOffset = (layerOffset + numSprites[layer])*24;
-
-	frameX /= spriteSheetWidth;
-	frameY /= spriteSheetHeight;
-	
-	addTexCoords(f, frameX, frameY, layer, w, h);
-		
-	//verticies ------------------------------------
-	verts[vertexOffset     ] = x;
-	verts[vertexOffset + 1 ] = y;
-	verts[vertexOffset + 2 ] = 0;
-	
-	verts[vertexOffset + 3 ] = x+w;
-	verts[vertexOffset + 4 ] = y;
-	verts[vertexOffset + 5 ] = 0;
-	
-	verts[vertexOffset + 6 ] = x;
-	verts[vertexOffset + 7 ] = y+h;
-	verts[vertexOffset + 8 ] = 0;
-	
-	
-	
-	verts[vertexOffset + 9 ] = x+w;
-	verts[vertexOffset + 10] = y;
-	verts[vertexOffset + 11] = 0;
-	
-	verts[vertexOffset + 12] = x;
-	verts[vertexOffset + 13] = y+h;
-	verts[vertexOffset + 14] = 0;
-	
-	verts[vertexOffset + 15] = x+w;
-	verts[vertexOffset + 16] = y+h;
-	verts[vertexOffset + 17] = 0;
-	
-	//colors ---------------------------------------
-	
-	colors[colorOffset	 ] = r;
-	colors[colorOffset + 1 ] = g;
-	colors[colorOffset + 2 ] = b;
-	colors[colorOffset + 3 ] = alpha;
-	
-	colors[colorOffset + 4 ] = r;
-	colors[colorOffset + 5 ] = g;
-	colors[colorOffset + 6 ] = b;
-	colors[colorOffset + 7 ] = alpha;
-	
-	colors[colorOffset + 8 ] = r;
-	colors[colorOffset + 9 ] = g;
-	colors[colorOffset + 10] = b;
-	colors[colorOffset + 11] = alpha;
-	
-	
-	
-	colors[colorOffset + 12] = r;
-	colors[colorOffset + 13] = g;
-	colors[colorOffset + 14] = b;
-	colors[colorOffset + 15] = alpha;
-	
-	colors[colorOffset + 16] = r;
-	colors[colorOffset + 17] = g;
-	colors[colorOffset + 18] = b;
-	colors[colorOffset + 19] = alpha;
-	
-	colors[colorOffset + 20] = r;
-	colors[colorOffset + 21] = g;
-	colors[colorOffset + 22] = b;
-	colors[colorOffset + 23] = alpha;
-	
-	//----------------------------------------------
-	
-	numSprites[layer]++;
-	
-	return true;
+    static ofColor color;
+    static ofVec2f p1, p2, p3, p4;
+    p1.set(x, y);
+    p2.set(x+w, y);
+    p3.set(x, y+h);
+    p4.set(x+w, y+h);
+    color.set(r, g, b, alpha);
+    return addCornerColorTile(tex_x, tex_y, p1, p2, p3, p4, layer, f, w, h, color, color, color, color);
 }
 
 bool ofxSpriteSheetRenderer::addCenteredTile(int tile_name, int frame, float x, float y, int layer, float w, float h, flipDirection f, float scale, int r, int g, int b, int alpha)
 {
-	if(layer==-1)
-		layer=defaultLayer;
+    // this one requires a bit of additional lookup
+    float tex_x;
+	float tex_y;
+
+	getFrameXandY(tile_name, tex_x, tex_x);
+	tex_x += frame*w*tileSize_f;
 	
-	if(texture == NULL)
-	{
-		cerr << "RENDER ERROR: No texture loaded!"  << endl;
-		return false;
-	}
-	
-	if(numSprites[layer] >= tilesPerLayer)
-	{
-		cerr << "RENDER ERROR: Layer " << layer << " over allocated! Max " << tilesPerLayer << " sprites per layer!"  << endl;
-		return false;
-	}
-	
-	if(layer > numLayers)
-	{
-		cerr << "RENDER ERROR: Bogus layer '" << layer << "'! Only " << numLayers << " layers compiled!"  << endl;
-		return false;
-	}
-	
-	float frameX;
-	float frameY;
-	int layerOffset = layer*tilesPerLayer;
-	int vertexOffset = (layerOffset + numSprites[layer])*18;
-	int colorOffset = (layerOffset + numSprites[layer])*24;
-	
-	getFrameXandY(tile_name, frameX, frameY);
-	
-	frameX += frame*w*tileSize_f;
-	
-	addTexCoords(f, frameX, frameY, layer, w, h);
-	
-	//rot*=2;
-	
+//    addTexCoords(f, tex_x, tex_y, layer, w, h);
+    static float tex_h = h;
+    static float tex_w = w;
+		
 	w*=tileSize*scale;
 	w/=2;
 	h*=tileSize*scale;
 	h/=2;
-	    
-	//verticies ------------------------------------
-	verts[vertexOffset     ] = x-w; //ul ur ll
-	verts[vertexOffset + 1 ] = y-h;
-	verts[vertexOffset + 2 ] = 0;
-	
-	verts[vertexOffset + 3 ] = x+w;
-	verts[vertexOffset + 4 ] = y-h;
-	verts[vertexOffset + 5 ] = 0;
-	
-	verts[vertexOffset + 6 ] = x-w;
-	verts[vertexOffset + 7 ] = y+h;
-	verts[vertexOffset + 8 ] = 0;
-	
-	
-	
-	verts[vertexOffset + 9 ] = x+w; //ur ll lr
-	verts[vertexOffset + 10] = y-h;
-	verts[vertexOffset + 11] = 0;
-	
-	verts[vertexOffset + 12] = x-w;
-	verts[vertexOffset + 13] = y+h;
-	verts[vertexOffset + 14] = 0;
-	
-	verts[vertexOffset + 15] = x+w;
-	verts[vertexOffset + 16] = y+h;
-	verts[vertexOffset + 17] = 0;
-	
-	//colors ---------------------------------------
-	
-	colors[colorOffset	 ] = r;
-	colors[colorOffset + 1 ] = g;
-	colors[colorOffset + 2 ] = b;
-	colors[colorOffset + 3 ] = alpha;
-	
-	colors[colorOffset + 4 ] = r;
-	colors[colorOffset + 5 ] = g;
-	colors[colorOffset + 6 ] = b;
-	colors[colorOffset + 7 ] = alpha;
-	
-	colors[colorOffset + 8 ] = r;
-	colors[colorOffset + 9 ] = g;
-	colors[colorOffset + 10] = b;
-	colors[colorOffset + 11] = alpha;
-	
-	
-	
-	colors[colorOffset + 12] = r;
-	colors[colorOffset + 13] = g;
-	colors[colorOffset + 14] = b;
-	colors[colorOffset + 15] = alpha;
-	
-	colors[colorOffset + 16] = r;
-	colors[colorOffset + 17] = g;
-	colors[colorOffset + 18] = b;
-	colors[colorOffset + 19] = alpha;
-	
-	colors[colorOffset + 20] = r;
-	colors[colorOffset + 21] = g;
-	colors[colorOffset + 22] = b;
-	colors[colorOffset + 23] = alpha;
-	
-	//----------------------------------------------
-	
-	numSprites[layer]++;
-	
-	return true;
+    static ofColor color;
+    static ofVec2f p1, p2, p3, p4;
+    p1.set(x-w, y-h);
+    p2.set(x+w, y-h);
+    p3.set(x-w, y+h);
+    p4.set(x+w, y+h);
+    color.set(r, g, b, alpha);
+    return addCornerColorTile(tex_x, tex_y, p1, p2, p3, p4, layer, f, tex_w, tex_h, color, color, color, color);
 }
 
 bool ofxSpriteSheetRenderer::addCenterRotatedTile(float tex_x, float tex_y, float x, float y, int layer, float w, float h, flipDirection f, float scale, int rot, int r, int g, int b, int alpha)
 {
-	if(layer==-1)
-		layer=defaultLayer;
 	
-	if(texture == NULL)
-	{
-		cerr << "RENDER ERROR: No texture loaded!"  << endl;
-		return false;
-	}
-	
-	if(numSprites[layer] >= tilesPerLayer)
-	{
-		cerr << "RENDER ERROR: Layer " << layer << " over allocated! Max " << tilesPerLayer << " sprites per layer!"  << endl;
-		return false;
-	}
-	
-	if(layer > numLayers)
-	{
-		cerr << "RENDER ERROR: Bogus layer '" << layer << "'! Only " << numLayers << " layers compiled!"  << endl;
-		return false;
-	}
-	
-	float frameX = tex_x;
-	float frameY = tex_y;
-
-	int layerOffset = layer*tilesPerLayer;
-	int vertexOffset = (layerOffset + numSprites[layer])*18;
-	int colorOffset = (layerOffset + numSprites[layer])*24;
-	
-	frameX /= spriteSheetWidth;
-	frameY /= spriteSheetHeight;
-	//	w /= sheetSize;
-	//	h /= sheetSize;
-	
+//    static float tex_h = h;
+//    static float tex_w = w;
+    
+//	tex_x /= spriteSheetWidth;
+//	tex_y /= spriteSheetHeight;
+//	tex_w /= spriteSheetWidth;
+//    tex_h /= spriteSheetHeight;
+    float sw = w;
+    float sh = h;
+    
 	int degOff = 0;
 	if (w != h) {
 		degOff = atan2(w/2, h/2)*RAD_TO_DEG-45;
 	}
-	addTexCoords(f, frameX, frameY, layer, w, h);
-	w *= scale;
-	h *= scale;
-	float halfSize = sqrt((w/2)*(w/2)+(h/2)*(h/2));
+	sw *= scale;
+	sh *= scale;
+	float halfSize = sqrt((sw/2)*(sw/2)+(sh/2)*(sh/2));
 	
 	
-	w = halfSize;
-	h = halfSize;
+	sw = halfSize;
+	sh = halfSize;
 
 	rot = rot%360;
 	if (rot<0)
@@ -616,183 +369,27 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(float tex_x, float tex_y, floa
 	llRot*=2;
 	lrRot*=2;
 
-    w = floor(w);
-    h = floor(h);
+    sw = floor(sw);
+    sh = floor(sh);
     x = floor(x);
     y = floor(y);
 
-	//verticies ------------------------------------
-	verts[vertexOffset     ] = x+w*ul[ulRot  ]; //ul ur ll
-	verts[vertexOffset + 1 ] = y+h*ul[ulRot+1];
-	verts[vertexOffset + 2 ] = 0;
-	
-	verts[vertexOffset + 3 ] = x+w*ur[urRot  ];
-	verts[vertexOffset + 4 ] = y+h*ur[urRot+1];
-	verts[vertexOffset + 5 ] = 0;
-	
-	verts[vertexOffset + 6 ] = x+w*ll[llRot  ];
-	verts[vertexOffset + 7 ] = y+h*ll[llRot+1];
-	verts[vertexOffset + 8 ] = 0;
-	
-	verts[vertexOffset + 9 ] = x+w*ur[urRot  ]; //ur ll lr
-	verts[vertexOffset + 10] = y+h*ur[urRot+1];
-	verts[vertexOffset + 11] = 0;
-	
-	verts[vertexOffset + 12] = x+w*ll[llRot  ];
-	verts[vertexOffset + 13] = y+h*ll[llRot+1];
-	verts[vertexOffset + 14] = 0;
-	
-	verts[vertexOffset + 15] = x+w*lr[lrRot  ];
-	verts[vertexOffset + 16] = y+h*lr[lrRot+1];
-	verts[vertexOffset + 17] = 0;
-	
-	//colors ---------------------------------------
-	
-	colors[colorOffset	 ] = r;
-	colors[colorOffset + 1 ] = g;
-	colors[colorOffset + 2 ] = b;
-	colors[colorOffset + 3 ] = alpha;
-	
-	colors[colorOffset + 4 ] = r;
-	colors[colorOffset + 5 ] = g;
-	colors[colorOffset + 6 ] = b;
-	colors[colorOffset + 7 ] = alpha;
-	
-	colors[colorOffset + 8 ] = r;
-	colors[colorOffset + 9 ] = g;
-	colors[colorOffset + 10] = b;
-	colors[colorOffset + 11] = alpha;
-	
-	
-	
-	colors[colorOffset + 12] = r;
-	colors[colorOffset + 13] = g;
-	colors[colorOffset + 14] = b;
-	colors[colorOffset + 15] = alpha;
-	
-	colors[colorOffset + 16] = r;
-	colors[colorOffset + 17] = g;
-	colors[colorOffset + 18] = b;
-	colors[colorOffset + 19] = alpha;
-	
-	colors[colorOffset + 20] = r;
-	colors[colorOffset + 21] = g;
-	colors[colorOffset + 22] = b;
-	colors[colorOffset + 23] = alpha;
-	
-	//----------------------------------------------
-	
-	numSprites[layer]++;
-	
-	return true;
+    static ofColor color;
+    static ofVec2f p1, p2, p3, p4;
+    p1.set(x+sw*ul[ulRot  ], y+sh*ul[ulRot+1]);
+    p2.set(x+sw*ur[urRot  ], y+sh*ur[urRot+1]);
+    p3.set(x+sw*ll[llRot  ], y+sh*ll[llRot+1]);
+    p4.set(x+sw*lr[lrRot  ], y+sh*lr[lrRot+1]);
+    color.set(r, g, b, alpha);
+    
+    return addCornerColorTile(tex_x, tex_y, p1, p2, p3, p4, layer, f, w, h, color, color, color, color);
+
 }
 bool ofxSpriteSheetRenderer::addCornerTile(float tex_x, float tex_y,  ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, flipDirection f, float w, float h, int r, int g, int b, int alpha)
 {
-	//flipDirection f = F_NONE;
-	if(layer==-1)
-		layer=defaultLayer;
-	
-	if(texture == NULL)
-	{
-		cerr << "RENDER ERROR: No texture loaded!"  << endl;
-		return false;
-	}
-	
-	if(numSprites[layer] >= tilesPerLayer)
-	{
-		cerr << "RENDER ERROR: Layer " << layer << " over allocated! Max " << tilesPerLayer << " sprites per layer!"  << endl;
-		return false;
-	}
-	
-	if(layer > numLayers)
-	{
-		cerr << "RENDER ERROR: Bogus layer '" << layer << "'! Only " << numLayers << " layers compiled!"  << endl;
-		return false;
-	}
-	
-	float frameX = tex_x;
-	float frameY = tex_y;
-	int layerOffset = layer*tilesPerLayer;
-	int vertexOffset = (layerOffset + numSprites[layer])*18;
-	int colorOffset = (layerOffset + numSprites[layer])*24;
-	
-	frameX /= spriteSheetWidth;
-	frameY /= spriteSheetHeight;
-	
-	addTexCoords(f, frameX, frameY, layer, w, h);
-
-	/*
-     cout << "START: " << p1 << endl;
-	cout << p2 << endl;
-	cout << p3 << endl;
-	cout << p4 << endl;
-    */
-	//verticies ------------------------------------
-	verts[vertexOffset     ] = p1.x; //tl
-	verts[vertexOffset + 1 ] = p1.y;
-	verts[vertexOffset + 2 ] = 0;
-	
-	verts[vertexOffset + 3 ] = p2.x; //tr
-	verts[vertexOffset + 4 ] = p2.y;
-	verts[vertexOffset + 5 ] = 0;
-	
-	verts[vertexOffset + 6 ] = p4.x;	//bl
-	verts[vertexOffset + 7 ] = p4.y;
-	verts[vertexOffset + 8 ] = 0;
-	
-	
-	
-	verts[vertexOffset + 9 ] = p2.x; //tr
-	verts[vertexOffset + 10] = p2.y;
-	verts[vertexOffset + 11] = 0;
-	
-	verts[vertexOffset + 12] = p4.x;	//bl
-	verts[vertexOffset + 13] = p4.y;
-	verts[vertexOffset + 14] = 0;
-	
-	verts[vertexOffset + 15] = p3.x; //br
-	verts[vertexOffset + 16] = p3.y;
-	verts[vertexOffset + 17] = 0;
-	
-	//colors ---------------------------------------
-	
-	colors[colorOffset	 ] = r;
-	colors[colorOffset + 1 ] = g;
-	colors[colorOffset + 2 ] = b;
-	colors[colorOffset + 3 ] = alpha;
-	
-	colors[colorOffset + 4 ] = r;
-	colors[colorOffset + 5 ] = g;
-	colors[colorOffset + 6 ] = b;
-	colors[colorOffset + 7 ] = alpha;
-	
-	colors[colorOffset + 8 ] = r;
-	colors[colorOffset + 9 ] = g;
-	colors[colorOffset + 10] = b;
-	colors[colorOffset + 11] = alpha;
-	
-	
-	
-	colors[colorOffset + 12] = r;
-	colors[colorOffset + 13] = g;
-	colors[colorOffset + 14] = b;
-	colors[colorOffset + 15] = alpha;
-	
-	colors[colorOffset + 16] = r;
-	colors[colorOffset + 17] = g;
-	colors[colorOffset + 18] = b;
-	colors[colorOffset + 19] = alpha;
-	
-	colors[colorOffset + 20] = r;
-	colors[colorOffset + 21] = g;
-	colors[colorOffset + 22] = b;
-	colors[colorOffset + 23] = alpha;
-	
-	//----------------------------------------------
-	
-	numSprites[layer]++;
-	
-	return true;	
+    static ofColor color;
+    color.set(r, g, b, alpha);
+    return addCornerColorTile(tex_x, tex_y, p1, p2, p3, p4, layer, f, w, h, color, color, color, color);
 }
 bool ofxSpriteSheetRenderer::addCornerColorTile(float tex_x, float tex_y,  ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, flipDirection f, float w, float h, ofColor c1, ofColor c2, ofColor c3, ofColor c4)
 {
@@ -821,81 +418,74 @@ bool ofxSpriteSheetRenderer::addCornerColorTile(float tex_x, float tex_y,  ofPoi
 	float frameX = tex_x;
 	float frameY = tex_y;
 	int layerOffset = layer*tilesPerLayer;
-	int vertexOffset = (layerOffset + numSprites[layer])*18;
-	int colorOffset = (layerOffset + numSprites[layer])*24;
+	int vertexOffset = (layerOffset + numSprites[layer])*6;
 	
 	frameX /= spriteSheetWidth;
 	frameY /= spriteSheetHeight;
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
+
+    // tl
+    // add a degenerate triangle at the beginning, i.e. put in the same point twice
+    points[vertexOffset].position[0] = p1.x;
+    points[vertexOffset].position[1] = p1.y;
+    points[vertexOffset].position[2] = 0;
+    // add a degenerate triangle at the beginning, i.e. put in the same point twice    
+    points[vertexOffset+1].position[0] = p1.x;
+    points[vertexOffset+1].position[1] = p1.y;
+    points[vertexOffset+1].position[2] = 0;
     
-	/*
-     cout << "START: " << p1 << endl;
-     cout << p2 << endl;
-     cout << p3 << endl;
-     cout << p4 << endl;
-     */
-	//verticies ------------------------------------
-	verts[vertexOffset     ] = p1.x; //tl
-	verts[vertexOffset + 1 ] = p1.y;
-	verts[vertexOffset + 2 ] = 0;
-	
-	verts[vertexOffset + 3 ] = p2.x; //tr
-	verts[vertexOffset + 4 ] = p2.y;
-	verts[vertexOffset + 5 ] = 0;
-	
-	verts[vertexOffset + 6 ] = p4.x;	//bl
-	verts[vertexOffset + 7 ] = p4.y;
-	verts[vertexOffset + 8 ] = 0;
-	
-	
-	
-	verts[vertexOffset + 9 ] = p2.x; //tr
-	verts[vertexOffset + 10] = p2.y;
-	verts[vertexOffset + 11] = 0;
-	
-	verts[vertexOffset + 12] = p4.x;	//bl
-	verts[vertexOffset + 13] = p4.y;
-	verts[vertexOffset + 14] = 0;
-	
-	verts[vertexOffset + 15] = p3.x; //br
-	verts[vertexOffset + 16] = p3.y;
-	verts[vertexOffset + 17] = 0;
-	
-	//colors ---------------------------------------
-	
-	colors[colorOffset	 ]   = c1.r;
-	colors[colorOffset + 1 ] = c1.g;
-	colors[colorOffset + 2 ] = c1.b;
-	colors[colorOffset + 3 ] = c1.a;
-	
-	colors[colorOffset + 4 ] = c2.r;
-	colors[colorOffset + 5 ] = c2.g;
-	colors[colorOffset + 6 ] = c2.b;
-	colors[colorOffset + 7 ] = c2.a;
-	
-	colors[colorOffset + 8 ] = c4.r;
-	colors[colorOffset + 9 ] = c4.g;
-	colors[colorOffset + 10] = c4.b;
-	colors[colorOffset + 11] = c4.a;
-	
-	
-	
-	colors[colorOffset + 12] = c2.r;
-	colors[colorOffset + 13] = c2.g;
-	colors[colorOffset + 14] = c2.b;
-	colors[colorOffset + 15] = c2.a;
-	
-	colors[colorOffset + 16] = c4.r;
-	colors[colorOffset + 17] = c4.g;
-	colors[colorOffset + 18] = c4.b;
-	colors[colorOffset + 19] = c4.a;
-	
-	colors[colorOffset + 20] = c3.r;
-	colors[colorOffset + 21] = c3.g;
-	colors[colorOffset + 22] = c3.b;
-	colors[colorOffset + 23] = c3.a;
-	
+    // tr
+    points[vertexOffset+2].position[0] = p2.x;
+    points[vertexOffset+2].position[1] = p2.y;
+    points[vertexOffset+2].position[2] = 0;
+    // bl
+    points[vertexOffset+3].position[0] = p3.x;
+    points[vertexOffset+3].position[1] = p3.y;
+    points[vertexOffset+3].position[2] = 0;
+    // br
+    points[vertexOffset+4].position[0] = p4.x;
+    points[vertexOffset+4].position[1] = p4.y;
+    points[vertexOffset+4].position[2] = 0;
+    // add another degenerate triangle at the end
+    points[vertexOffset+5].position[0] = p4.x;
+    points[vertexOffset+5].position[1] = p4.y;
+    points[vertexOffset+5].position[2] = 0;
+    
+    // do the same thing for the colors
+    // tl
+    points[vertexOffset].color[0] = c1.r;
+    points[vertexOffset].color[1] = c1.g;
+    points[vertexOffset].color[2] = c1.b;
+    points[vertexOffset].color[3] = c1.a;
+    // add a degenerate triangle at the beginning, i.e. put in the same point twice    
+    points[vertexOffset+1].color[0] = c1.r;
+    points[vertexOffset+1].color[1] = c1.g;
+    points[vertexOffset+1].color[2] = c1.b;
+    points[vertexOffset+1].color[3] = c1.a;
+    
+    // tr
+    points[vertexOffset+2].color[0] = c2.r;
+    points[vertexOffset+2].color[1] = c2.g;
+    points[vertexOffset+2].color[2] = c2.b;
+    points[vertexOffset+2].color[3] = c2.a;
+    // bl
+    points[vertexOffset+3].color[0] = c3.r;
+    points[vertexOffset+3].color[1] = c3.g;
+    points[vertexOffset+3].color[2] = c3.b;
+    points[vertexOffset+3].color[3] = c3.a;
+    // br
+    points[vertexOffset+4].color[0] = c4.r;
+    points[vertexOffset+4].color[1] = c4.g;
+    points[vertexOffset+4].color[2] = c4.b;
+    points[vertexOffset+4].color[3] = c4.a;
+    
+    // add another degenerate triangle at the end
+    points[vertexOffset+5].color[0] = c4.r;
+    points[vertexOffset+5].color[1] = c4.g;
+    points[vertexOffset+5].color[2] = c4.b;
+    points[vertexOffset+5].color[3] = c4.a;
+		
 	//----------------------------------------------
 	
 	numSprites[layer]++;
@@ -916,17 +506,16 @@ void ofxSpriteSheetRenderer::draw()
 		glEnableClientState(GL_COLOR_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	}
-	
-	glVertexPointer(3, GL_FLOAT, 0, &verts[0]);
-	glColorPointer(4, GL_UNSIGNED_BYTE, 0, &colors[0]);
-	glTexCoordPointer(2, GL_FLOAT, 0, &coords[0]);
-	
+        
+	glVertexPointer(3, GL_SHORT, sizeof(vertexStruct), &points[0].position);
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(vertexStruct), &points[0].color);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(vertexStruct), &points[0].texCoord);
 	texture->bind();
-	for(int i = 0; i < numLayers; i++)
+	for(int i = 0; i < numLayers; i++){
 		if(numSprites[i] > 0){
-			glDrawArrays(GL_TRIANGLES, i*tilesPerLayer*6, numSprites[i]*6);
-//            cout << "number of sprites: " << numSprites[i] << " on layer: "  << i << endl;
+			glDrawArrays(GL_TRIANGLE_STRIP, i*tilesPerLayer*6, numSprites[i]*6);
         }
+    }
 	texture->unbind();
 	if(safeMode)
 	{
@@ -939,97 +528,98 @@ void ofxSpriteSheetRenderer::draw()
 void ofxSpriteSheetRenderer::addTexCoords(flipDirection f, float &frameX, float &frameY, int layer, float w, float h)
 {
 	int layerOffset = layer*tilesPerLayer;
-	int coordOffset = (layerOffset + numSprites[layer])*12;
+	int coordOffset = (layerOffset + numSprites[layer])*6;
 	w /= spriteSheetWidth;
 	h /= spriteSheetHeight;
 	
 	switch (f) {
 		case F_NONE:
-			coords[coordOffset     ] = frameX;
-			coords[coordOffset + 1 ] = frameY;
+            //tl
+            points[coordOffset].texCoord[0] = frameX;
+            points[coordOffset].texCoord[1] = frameY;
+            points[coordOffset+1].texCoord[0] = frameX;
+            points[coordOffset+1].texCoord[1] = frameY;
+
+            //tr
+            points[coordOffset+2].texCoord[0] = frameX+w;
+            points[coordOffset+2].texCoord[1] = frameY;
+
+			//bl
+            points[coordOffset+3].texCoord[0] = frameX;
+            points[coordOffset+3].texCoord[1] = frameY+h;
 			
-			coords[coordOffset + 2 ] = frameX+w;
-			coords[coordOffset + 3 ] = frameY;
-			
-			coords[coordOffset + 4 ] = frameX;
-			coords[coordOffset + 5 ] = frameY+h;
-			
-			
-			
-			coords[coordOffset + 6 ] = frameX+w;
-			coords[coordOffset + 7 ] = frameY;
-			
-			coords[coordOffset + 8 ] = frameX;
-			coords[coordOffset + 9 ] = frameY+h;
-			
-			coords[coordOffset + 10] = frameX+w;
-			coords[coordOffset + 11] = frameY+h;
+			//br
+            points[coordOffset+4].texCoord[0] = frameX+w;
+            points[coordOffset+4].texCoord[1] = frameY+h;
+            points[coordOffset+5].texCoord[0] = frameX+w;
+            points[coordOffset+5].texCoord[1] = frameY+h;
 			
 			break;
 		case F_HORIZ:
-			coords[coordOffset     ] = frameX+w;
-			coords[coordOffset + 1 ] = frameY;
+            
+            //tl
+            points[coordOffset].texCoord[0] = frameX+w;
+            points[coordOffset].texCoord[1] = frameY;
+            points[coordOffset+1].texCoord[0] = frameX+w;
+            points[coordOffset+1].texCoord[1] = frameY;
+            
+            //tr
+            points[coordOffset+2].texCoord[0] = frameX;
+            points[coordOffset+2].texCoord[1] = frameY;
+            
+			//bl
+            points[coordOffset+3].texCoord[0] = frameX+w;
+            points[coordOffset+3].texCoord[1] = frameY+h;
 			
-			coords[coordOffset + 2 ] = frameX;
-			coords[coordOffset + 3 ] = frameY;
-			
-			coords[coordOffset + 4 ] = frameX+w;
-			coords[coordOffset + 5 ] = frameY+h;
-			
-			
-			
-			coords[coordOffset + 6 ] = frameX;
-			coords[coordOffset + 7 ] = frameY;
-			
-			coords[coordOffset + 8 ] = frameX+w;
-			coords[coordOffset + 9 ] = frameY+h;
-			
-			coords[coordOffset + 10] = frameX;
-			coords[coordOffset + 11] = frameY+h;
+			//br
+            points[coordOffset+4].texCoord[0] = frameX;
+            points[coordOffset+4].texCoord[1] = frameY+h;
+            points[coordOffset+5].texCoord[0] = frameX;
+            points[coordOffset+5].texCoord[1] = frameY+h;
 			
 			break;
 		case F_VERT:
-			coords[coordOffset     ] = frameX;
-			coords[coordOffset + 1 ] = frameY+h;
+            //tl
+            points[coordOffset].texCoord[0] = frameX;
+            points[coordOffset].texCoord[1] = frameY+h;
+            points[coordOffset+1].texCoord[0] = frameX;
+            points[coordOffset+1].texCoord[1] = frameY+h;
+            
+            //tr
+            points[coordOffset+2].texCoord[0] = frameX+w;
+            points[coordOffset+2].texCoord[1] = frameY+h;
+            
+			//bl
+            points[coordOffset+3].texCoord[0] = frameX;
+            points[coordOffset+3].texCoord[1] = frameY;
 			
-			coords[coordOffset + 2 ] = frameX+w;
-			coords[coordOffset + 3 ] = frameY+h;
-			
-			coords[coordOffset + 4 ] = frameX;
-			coords[coordOffset + 5 ] = frameY;
-			
-			
-			
-			coords[coordOffset + 6 ] = frameX+w;
-			coords[coordOffset + 7 ] = frameY+h;
-			
-			coords[coordOffset + 8 ] = frameX;
-			coords[coordOffset + 9 ] = frameY;
-			
-			coords[coordOffset + 10] = frameX+w;
-			coords[coordOffset + 11] = frameY;
+			//br
+            points[coordOffset+4].texCoord[0] = frameX+w;
+            points[coordOffset+4].texCoord[1] = frameY;
+            points[coordOffset+5].texCoord[0] = frameX+w;
+            points[coordOffset+5].texCoord[1] = frameY;
 			
 			break;
 		case F_HORIZ_VERT:
-			coords[coordOffset     ] = frameX+w;
-			coords[coordOffset + 1 ] = frameY+h;
+            //tl
+            points[coordOffset].texCoord[0] = frameX+w;
+            points[coordOffset].texCoord[1] = frameY+h;
+            points[coordOffset+1].texCoord[0] = frameX+w;
+            points[coordOffset+1].texCoord[1] = frameY+h;
+            
+            //tr
+            points[coordOffset+2].texCoord[0] = frameX;
+            points[coordOffset+2].texCoord[1] = frameY+h;
+            
+			//bl
+            points[coordOffset+3].texCoord[0] = frameX+w;
+            points[coordOffset+3].texCoord[1] = frameY;
 			
-			coords[coordOffset + 2 ] = frameX;
-			coords[coordOffset + 3 ] = frameY+h;
-			
-			coords[coordOffset + 4 ] = frameX+w;
-			coords[coordOffset + 5 ] = frameY;
-			
-			
-			
-			coords[coordOffset + 6 ] = frameX;
-			coords[coordOffset + 7 ] = frameY+h;
-			
-			coords[coordOffset + 8 ] = frameX+w;
-			coords[coordOffset + 9 ] = frameY;
-			
-			coords[coordOffset + 10] = frameX;
-			coords[coordOffset + 11] = frameY;
+			//br
+            points[coordOffset+4].texCoord[0] = frameX;
+            points[coordOffset+4].texCoord[1] = frameY;
+            points[coordOffset+5].texCoord[0] = frameX;
+            points[coordOffset+5].texCoord[1] = frameY;
 			
 			break;
 		default:

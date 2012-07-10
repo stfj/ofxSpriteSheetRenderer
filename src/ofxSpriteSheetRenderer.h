@@ -36,6 +36,20 @@
 #include "PixelTexture.h"
 #include "LinearTexture.h"
 
+typedef struct _vertexStruct
+{
+    GLshort position[4];
+    GLubyte color[4];
+    GLfloat texCoord[2];
+} vertexStruct;
+
+enum {
+    ATTRIB_POSITION,
+    ATTRIB_COLOR,
+    ATTRIB_TEX,
+    NUM_ATTRIBUTES
+};
+
 typedef struct {
 	int index;                    //								integer index into the sprite sheet to draw from. sprite sheet is numbered left to right, top to bottom
 	int frame;                    // DEFAULT SHOULD BE SET TO 0.	which frame of the animation to draw. current tile is calculated as index+frame..
@@ -76,7 +90,7 @@ class ofxSpriteSheetRenderer
 public:
 	ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize);
 	~ofxSpriteSheetRenderer();
-	
+	static int polyCount, polyCountFrame;
 	void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize);
 	
 	void loadTexture(string fileName, int widthHeight, int internalGLScaleMode);
@@ -143,11 +157,9 @@ protected:
 	int sheetSize_y;
     int sheetSize_x;
 	unsigned long gameTime;
-	
-	float * verts;
-	float * coords;
-	unsigned char * colors;
-	
+		
+    vertexStruct * points;
+
 	int * numSprites;
 	int spriteSheetWidth;
 	int spriteSheetHeight;
@@ -156,6 +168,8 @@ protected:
 	float ur[720];
 	float ll[720];
 	float lr[720];
+    ofRectangle screen;
+
 };
 
 #endif

@@ -98,11 +98,11 @@ void LinearTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBE
 	glGenTextures(1, (GLuint *)&texData.textureID);   // could be more then one, but for now, just one
 	
 	glEnable(texData.textureTarget);
-    GLenum err;
 
 	glBindTexture(texData.textureTarget, (GLuint)texData.textureID);
     glTexParameteri(texData.textureTarget, GL_GENERATE_MIPMAP, GL_TRUE);
 
+    GLenum err;
     err = glGetError();
     if (err != GL_NO_ERROR)
     {
@@ -127,7 +127,7 @@ void LinearTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBE
     err = glGetError();
     if (err != GL_NO_ERROR)
     {
-        cout << "4Error setting up texture " << err << endl;
+        cout << "Error setting up texture " << err << endl;
     }
 
 	
