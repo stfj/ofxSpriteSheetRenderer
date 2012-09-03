@@ -23,7 +23,49 @@
  ************************************************************************/ 
 
 #include "LinearTexture.h"
+#include "FreeImage.h"
+void PFileImage::loadFromPFS(string textureName)
+{   
+    if(PHYSFS_exists(textureName.c_str())){
+        PHYSFS_File *file = PHYSFS_openRead(textureName.c_str());
+        char *myBuf;
+        myBuf = new char[PHYSFS_fileLength(file)];
+        int length_read = PHYSFS_read (file, myBuf, 1, PHYSFS_fileLength(file));
+        PHYSFS_close(file);
+        
+        FIMEMORY *hmem = NULL;   
+        hmem = FreeImage_OpenMemory((Byte *)myBuf, length_read);   
+        if (hmem == NULL){ printf("couldn't create memory handle! \n"); return; }   
 
+        bool bLoaded = false;
+        FIBITMAP * bmp = NULL;
+        
+        FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+        fif = FreeImage_GetFileTypeFromMemory(hmem);
+        if((fif != FIF_UNKNOWN) && FreeImage_FIFSupportsReading(fif)) {
+            bmp = FreeImage_LoadFromMemory(fif, hmem, 0);
+            if (bmp != NULL){
+                bLoaded = true;
+            }
+        }
+        //-----------------------------
+//        ofPixels pixels;
+
+        if ( bLoaded ){
+            putBmpIntoPixels(bmp, pixels, false);
+        }
+        
+        FreeImage_FlipVertical(bmp);
+        
+        if (bmp != NULL){
+            FreeImage_Unload(bmp);
+        }
+        FreeImage_CloseMemory(hmem);  
+        
+        if (bmp == NULL){ printf("couldn't create bmp! \n"); return; }   
+        update();   
+    }
+}
 void LinearTexture::loadTexture(string textureName, int glType)
 {
 	ofImage loader;
@@ -38,6 +80,16 @@ void LinearTexture::loadTextureFromPVR(string textureName, int glType)
 {
     
 }
+void LinearTexture::loadTextureFromPFS(string textureName, int  glType)
+{
+	PFileImage loader;
+	loader.setUseTexture(false);
+	loader.loadFromPFS(textureName);
+	allocate(loader.getWidth(), loader.getHeight(), glType);
+	loadData(loader.getPixels(), loader.getWidth(), loader.getHeight(), glType);
+	loader.clear();
+}
+
 void LinearTexture::allocate(int w, int h, int internalGlDataType){
 	allocate(w, h, internalGlDataType, false);
 }

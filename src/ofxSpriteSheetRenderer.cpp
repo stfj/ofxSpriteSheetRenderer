@@ -297,7 +297,6 @@ bool ofxSpriteSheetRenderer::addCenteredTile(int tile_name, int frame, float x, 
 	getFrameXandY(tile_name, tex_x, tex_x);
 	tex_x += frame*w*tileSize_f;
 	
-//    addTexCoords(f, tex_x, tex_y, layer, w, h);
     static float tex_h = h;
     static float tex_w = w;
 		
@@ -423,7 +422,7 @@ bool ofxSpriteSheetRenderer::addCornerColorTile(float tex_x, float tex_y,  ofPoi
 	frameX /= spriteSheetWidth;
 	frameY /= spriteSheetHeight;
 	
-	addTexCoords(f, frameX, frameY, layer, w, h);
+	addTexCoords(f, frameX, frameY, layer, vertexOffset, w, h);
 
     // tl
     // add a degenerate triangle at the beginning, i.e. put in the same point twice
@@ -525,10 +524,8 @@ void ofxSpriteSheetRenderer::draw()
 	}
 }
 
-void ofxSpriteSheetRenderer::addTexCoords(flipDirection f, float &frameX, float &frameY, int layer, float w, float h)
+void ofxSpriteSheetRenderer::addTexCoords(flipDirection f, float &frameX, float &frameY, int layer, int coordOffset, float w, float h)
 {
-	int layerOffset = layer*tilesPerLayer;
-	int coordOffset = (layerOffset + numSprites[layer])*6;
 	w /= spriteSheetWidth;
 	h /= spriteSheetHeight;
 	

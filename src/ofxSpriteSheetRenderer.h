@@ -140,7 +140,7 @@ protected:
 	
 	void getFrameXandY(int tile_position, float &x, float &y);
 	
-	void addTexCoords(flipDirection f, float &frameX, float &frameY, int layer, float x=1, float y=1);
+	void addTexCoords(flipDirection f, float &frameX, float &frameY, int layer, int coorOffset, float x=1, float y=1);
 	
 	
 	float tileSize_f;

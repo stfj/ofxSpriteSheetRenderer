@@ -37,6 +37,14 @@
 #endif
 
 #include "ofMain.h"
+#include "physfs.h"
+#include "ofImage.h"
+
+class PFileImage : public ofImage
+{
+public:
+    void loadFromPFS(string filename);
+};
 
 class LinearTexture : public ofTexture
 {
@@ -46,6 +54,7 @@ public:
 	
 	void loadTexture(string textureName, int glType=GL_RGBA);
     void loadTextureFromPVR(string textureName, int glType=GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG);
+    void loadTextureFromPFS(string textureName, int  glType=GL_RGBA);
 };
 
 #endif
