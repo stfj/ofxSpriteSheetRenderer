@@ -53,6 +53,7 @@ void PFileImage::loadFromPFS(string textureName)
 
         if ( bLoaded ){
             putBmpIntoPixels(bmp, pixels, false);
+            pixels.swapRgb();
         }
         
         FreeImage_FlipVertical(bmp);
