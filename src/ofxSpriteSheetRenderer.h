@@ -32,9 +32,12 @@
 #define OFX_SPRITE_SHEET_RENDERER_H
 
 #include "ofMain.h"
+#import <OpenGLES/ES2/gl.h>
+#import <OpenGLES/ES2/glext.h>
 #include "CollageTexture.h"
 #include "PixelTexture.h"
 #include "LinearTexture.h"
+//#include "testApp.h"
 
 typedef struct _vertexStruct
 {
@@ -117,7 +120,7 @@ public:
     bool addCornerColorTile(float tex_x, float tex_y,  ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, flipDirection f, float w, float h, ofColor c1, ofColor c2, ofColor c3, ofColor c4);
     
 	void update(unsigned long time);
-	void draw();
+	void draw(ofShader *shader);
 	
 	bool safeMode;
 	

@@ -497,30 +497,38 @@ void ofxSpriteSheetRenderer::update(unsigned long time)
 	gameTime = time;
 }
 
-void ofxSpriteSheetRenderer::draw()
+void ofxSpriteSheetRenderer::draw(ofShader *shader)
 {	
 	if(safeMode)
 	{
+        /*
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_COLOR_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+         */
 	}
-        
-	glVertexPointer(3, GL_SHORT, sizeof(vertexStruct), &points[0].position);
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(vertexStruct), &points[0].color);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(vertexStruct), &points[0].texCoord);
-	texture->bind();
+
+    shader->setUniformTexture("Texture", *texture, texture->getTextureData().textureID);
+    glVertexAttribPointer(glGetAttribLocation(shader->getProgram(), "position"), 3, GL_SHORT, GL_FALSE, sizeof(vertexStruct), &points[0].position);  
+    glVertexAttribPointer(glGetAttribLocation(shader->getProgram(), "color"), 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertexStruct), &points[0].color);
+
+    glVertexAttribPointer(glGetAttribLocation(shader->getProgram(), "TexCoordIn"), 2, GL_FLOAT, GL_TRUE, sizeof(vertexStruct), &points[0].texCoord);  
+    
+
+//	texture->bind();
 	for(int i = 0; i < numLayers; i++){
 		if(numSprites[i] > 0){
 			glDrawArrays(GL_TRIANGLE_STRIP, i*tilesPerLayer*6, numSprites[i]*6);
         }
     }
-	texture->unbind();
+//	texture->unbind();
 	if(safeMode)
 	{
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableClientState(GL_COLOR_ARRAY);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        /*
+		glDisable(GL_VERTEX_ARRAY);
+		glDisable(GL_COLOR_ARRAY);
+		glDisable(GL_TEXTURE_COORD_ARRAY);
+         */
 	}
 }
 
