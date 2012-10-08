@@ -31,6 +31,7 @@ ofxSpriteSheetRenderer::ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLaye
 {
 	texture = NULL;
 	numSprites = NULL;
+    numVertexes = NULL;
 	points = NULL;
     
 	textureIsExternal = false;
@@ -52,6 +53,8 @@ ofxSpriteSheetRenderer::~ofxSpriteSheetRenderer()
 	
 	if(numSprites != NULL)
 		delete[] numSprites;
+    if(numVertexes != NULL)
+        delete[] numVertexes;
     if(points != NULL)
         delete[] points;
 }
@@ -67,8 +70,11 @@ void ofxSpriteSheetRenderer::reAllocateArrays(int _numLayers, int _tilesPerLayer
 		delete[] points;
 	if(numSprites != NULL)
 		delete[] numSprites;
+    if(numVertexes != NULL)
+        delete[] numVertexes;
 	
-	numSprites = new int[numLayers];	
+	numSprites = new int[numLayers];
+	numVertexes = new int[numLayers];
     points = new vertexStruct[numLayers * tilesPerLayer * 6];
     
 	clear();
@@ -176,10 +182,14 @@ void ofxSpriteSheetRenderer::loadTexture(LinearTexture * _texture){
 
 void ofxSpriteSheetRenderer::clear(int layer)
 {
-	if(layer==-1)
+	if(layer==-1){
 		for(int i = 0; i < numLayers; i++) numSprites[i] = 0;
-	else
+        for(int i = 0; i < numLayers; i++) numVertexes[i] = 0;
+    }
+	else{
 		numSprites[layer]=0;
+        numVertexes[layer] = 0;
+    }
 }
 
 // nasser added, not trying to match zach's godless coding style
@@ -402,7 +412,7 @@ bool ofxSpriteSheetRenderer::addCornerColorTile(float tex_x, float tex_y,  ofPoi
 		return false;
 	}
 	
-	if(numSprites[layer] >= tilesPerLayer)
+	if(numVertexes[layer] >= tilesPerLayer*6)
 	{
 		cerr << "RENDER ERROR: Layer " << layer << " over allocated! Max " << tilesPerLayer << " sprites per layer!"  << endl;
 		return false;
@@ -416,8 +426,8 @@ bool ofxSpriteSheetRenderer::addCornerColorTile(float tex_x, float tex_y,  ofPoi
 	
 	float frameX = tex_x;
 	float frameY = tex_y;
-	int layerOffset = layer*tilesPerLayer;
-	int vertexOffset = (layerOffset + numSprites[layer])*6;
+	int layerOffset = layer*tilesPerLayer*6;
+	int vertexOffset = (layerOffset + numVertexes[layer]);
 	
 	frameX /= spriteSheetWidth;
 	frameY /= spriteSheetHeight;
@@ -488,8 +498,32 @@ bool ofxSpriteSheetRenderer::addCornerColorTile(float tex_x, float tex_y,  ofPoi
 	//----------------------------------------------
 	
 	numSprites[layer]++;
+	numVertexes[layer] += 6;
 	
 	return true;	
+}
+bool ofxSpriteSheetRenderer::addMesh(ofMesh &mesh){
+    // copy the points from the mesh
+    ofVec3f *verts = mesh.getVerticesPointer();
+    ofVec2f *texCoords = mesh.getTexCoordsPointer();
+    // force to zero layer for now
+	int vertexOffset = (0 + numVertexes[0]);
+    for (int i=0; i<mesh.getNumVertices(); i++) {
+        points[vertexOffset+i].position[0] = verts[i].x;
+        points[vertexOffset+i].position[1] = verts[i].y;
+        points[vertexOffset+i].position[2] = verts[i].z;
+        // just force to white for now
+        points[vertexOffset+i].color[0] = mesh.getColor(i).r*255.0;
+        points[vertexOffset+i].color[1] = mesh.getColor(i).g*255.0;
+        points[vertexOffset+i].color[2] = mesh.getColor(i).b*255.0;
+        points[vertexOffset+i].color[3] = mesh.getColor(i).a*255.0;
+        // and dump in just the top left corner of the sprite
+        points[vertexOffset+i].texCoord[0] = texCoords[i].x/spriteSheetWidth;
+        points[vertexOffset+i].texCoord[1] = texCoords[i].y/spriteSheetHeight;
+
+        numVertexes[0]++;
+    }
+    return true;
 }
 
 void ofxSpriteSheetRenderer::update(unsigned long time)
@@ -498,38 +532,48 @@ void ofxSpriteSheetRenderer::update(unsigned long time)
 }
 
 void ofxSpriteSheetRenderer::draw(ofShader *shader)
-{	
+{
+#ifndef TARGET_OF_IPHONE
 	if(safeMode)
 	{
-        /*
+        /**/
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_COLOR_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-         */
+        
 	}
-
+    texture->bind();
+#elif defined TARGET_OF_IPHONE
+    /**/
     shader->setUniformTexture("Texture", *texture, texture->getTextureData().textureID);
     glVertexAttribPointer(glGetAttribLocation(shader->getProgram(), "position"), 3, GL_SHORT, GL_FALSE, sizeof(vertexStruct), &points[0].position);  
     glVertexAttribPointer(glGetAttribLocation(shader->getProgram(), "color"), 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertexStruct), &points[0].color);
 
-    glVertexAttribPointer(glGetAttribLocation(shader->getProgram(), "TexCoordIn"), 2, GL_FLOAT, GL_TRUE, sizeof(vertexStruct), &points[0].texCoord);  
-    
-
-//	texture->bind();
+    glVertexAttribPointer(glGetAttribLocation(shader->getProgram(), "TexCoordIn"), 2, GL_FLOAT, GL_TRUE, sizeof(vertexStruct), &points[0].texCoord);
+#endif
 	for(int i = 0; i < numLayers; i++){
-		if(numSprites[i] > 0){
-			glDrawArrays(GL_TRIANGLE_STRIP, i*tilesPerLayer*6, numSprites[i]*6);
+		if(numVertexes[i] > 0){
+            /**/
+#ifndef TARGET_OF_IPHONE
+            glVertexPointer(3, GL_SHORT, sizeof(vertexStruct), &points[0].position);
+            glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(vertexStruct), &points[0].color);
+            glTexCoordPointer(2, GL_FLOAT, sizeof(vertexStruct), &points[0].texCoord);
+#endif
+            //printf("%i numvertexes: %i for layer: %i %i\n", i*tilesPerLayer*6, numVertexes[i], i, GL_TRIANGLE_STRIP);
+			glDrawArrays(GL_TRIANGLE_STRIP, i*tilesPerLayer*6, numVertexes[i]);
         }
     }
-//	texture->unbind();
+#ifndef TARGET_OF_IPHONE
 	if(safeMode)
 	{
-        /*
+     /*
 		glDisable(GL_VERTEX_ARRAY);
 		glDisable(GL_COLOR_ARRAY);
 		glDisable(GL_TEXTURE_COORD_ARRAY);
-         */
+       */ 
 	}
+    texture->unbind();
+#endif
 }
 
 void ofxSpriteSheetRenderer::addTexCoords(flipDirection f, float &frameX, float &frameY, int layer, int coordOffset, float w, float h)

@@ -32,8 +32,10 @@
 #define OFX_SPRITE_SHEET_RENDERER_H
 
 #include "ofMain.h"
-#import <OpenGLES/ES2/gl.h>
-#import <OpenGLES/ES2/glext.h>
+#if defined TARGET_OF_IPHONE
+    #import <OpenGLES/ES2/gl.h>
+    #import <OpenGLES/ES2/glext.h>
+#endif
 #include "CollageTexture.h"
 #include "PixelTexture.h"
 #include "LinearTexture.h"
@@ -118,7 +120,7 @@ public:
 	bool addCenterRotatedTile(float tex_x, float tex_y, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, int r=255, int g=255, int b=255, int alpha=255);
 	bool addCornerTile       (float tex_x, float tex_y, ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer = -1, flipDirection f= F_NONE, float w = 1, float h = 1, int r=255, int g=255, int b=255, int alpha=255);
     bool addCornerColorTile(float tex_x, float tex_y,  ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4, int layer, flipDirection f, float w, float h, ofColor c1, ofColor c2, ofColor c3, ofColor c4);
-    
+    bool addMesh(ofMesh &mesh);
 	void update(unsigned long time);
 	void draw(ofShader *shader);
 	
@@ -164,6 +166,7 @@ protected:
     vertexStruct * points;
 
 	int * numSprites;
+    int * numVertexes;
 	int spriteSheetWidth;
 	int spriteSheetHeight;
     

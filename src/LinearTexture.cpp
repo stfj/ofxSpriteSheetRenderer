@@ -45,6 +45,7 @@ void PFileImage::loadFromPFS(string textureName)
         if((fif != FIF_UNKNOWN) && FreeImage_FIFSupportsReading(fif)) {
             bmp = FreeImage_LoadFromMemory(fif, hmem, 0);
             if (bmp != NULL){
+                cout << "loaded" << endl;
                 bLoaded = true;
             }
         }
@@ -70,10 +71,11 @@ void PFileImage::loadFromPFS(string textureName)
 void LinearTexture::loadTexture(string textureName, int glType)
 {
 	ofImage loader;
-	loader.setUseTexture(false);
+	loader.setUseTexture(true);
 	loader.loadImage(textureName);
 	allocate(loader.getWidth(), loader.getHeight(), glType);
-	loadData(loader.getPixels(), loader.getWidth(), loader.getHeight(), glType);
+    loadData(loader.getPixels(), loader.getWidth(), loader.getHeight(), glType);
+	cout << "failed" << endl;
 	
 	loader.clear();
 }
@@ -93,11 +95,16 @@ void LinearTexture::loadTextureFromPFS(string textureName, int  glType)
 	PFileImage loader;
 	loader.setUseTexture(false);
 	loader.loadFromPFS(textureName);
+    cout << "loading texture: " << textureName << endl;
 	allocate(loader.getWidth(), loader.getHeight(), glType);
+    cout << "loading texture: " << textureName << " " << loader.getWidth() << " " << loader.getHeight() << endl;
     loadData(loader.getPixels(), loader.getWidth(), loader.getHeight(), glType);
+    cout << "loading texture: " << textureName << endl;
     // generate mipmaps needs to be done after the texture is loaded
     glGenerateMipmap(GL_TEXTURE_2D);
+    cout << "loading texture: " << textureName << endl;
 	loader.clear();
+    cout << "loading texture: " << textureName << endl;
 }
 
 void LinearTexture::allocate(int w, int h, int internalGlDataType){
@@ -164,8 +171,12 @@ void LinearTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBE
         cout << "4Error setting up texture " << err << endl;
     }
     glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, texData.tex_w, texData.tex_h, 0, texData.glTypeInternal, GL_UNSIGNED_BYTE, 0);
+    /*
 	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    */
+	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     err = glGetError();
     if (err != GL_NO_ERROR)
