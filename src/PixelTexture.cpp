@@ -73,24 +73,24 @@ void PixelTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBEx
 #ifndef TARGET_OPENGLES	
 		case GL_RGBA32F_ARB:
 		case GL_RGBA16F_ARB:
-			texData.glType		= GL_RGBA;
-			texData.pixelType	= GL_FLOAT;
+			internal.glType = GL_RGBA;
+			internal.pixelType = GL_FLOAT;
 			break;
 			
 		case GL_RGB32F_ARB:
-			texData.glType		= GL_RGB;
-			texData.pixelType	= GL_FLOAT;
+			internal.glType = GL_RGB;
+			internal.pixelType = GL_FLOAT;
 			break;
 			
 		case GL_LUMINANCE32F_ARB:
-			texData.glType		= GL_LUMINANCE;
-			texData.pixelType	= GL_FLOAT;
+			internal.glType = GL_LUMINANCE;
+			internal.pixelType = GL_FLOAT;
 			break;
 #endif			
 			
 		default:
-			texData.glType		= GL_LUMINANCE;
-			//texData.pixelType	= GL_UNSIGNED_BYTE;
+			internal.glType = GL_LUMINANCE;
+			//internal.pixelType	= GL_UNSIGNED_BYTE;
 	}
 	
 	// attempt to free the previous bound texture, if we can:
@@ -112,7 +112,7 @@ void PixelTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBEx
 	// internalGlDataType and glDataType (GL_LUMINANCE below)
 	// can be different; on ES they must be exactly the same.
 	//		glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, (GLint)texData.tex_w, (GLint)texData.tex_h, 0, GL_LUMINANCE, PIXEL_TYPE, 0);  // init to black...
-	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, (GLint)texData.tex_w, (GLint)texData.tex_h, 0, texData.glType, texData.pixelType, 0);  // init to black...
+	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, (GLint) texData.tex_w, (GLint) texData.tex_h, 0, internal.glType, internal.pixelType, 0);  // init to black...
 #else
 	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, texData.tex_w, texData.tex_h, 0, texData.glTypeInternal, GL_UNSIGNED_BYTE, 0);
 #endif

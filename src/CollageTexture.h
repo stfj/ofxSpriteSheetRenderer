@@ -56,7 +56,12 @@ public:
 	int c_type;
 	
 protected:
-	
+
+	struct {
+		GLenum glType;
+		GLenum pixelType;
+	} internal;
+
 	int getIndex(int x, int y);
 };
 
