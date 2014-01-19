@@ -22,4 +22,9 @@ public:
 	
 	int width;
 	int height;
+
+  struct {
+		GLenum glType;
+		GLenum pixelType;
+	} internal;
 };
