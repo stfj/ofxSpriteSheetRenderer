@@ -78,7 +78,8 @@ public:
 	
 	void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize);
 	
-	void loadTexture(string fileName, int widthHeight, int internalGLScaleMode);
+    void loadTexture(string fileName, int widthHeight, int internalGLScaleMode); // Square
+    void loadTexture(string fileName, int width, int height, int internalGLScaleMode); // Not square
 	void loadTexture(ofTexture * _texture);
 	void loadTexture(CollageTexture * _texture);
 	void loadTexture(PixelTexture * _texture);
@@ -143,7 +144,8 @@ public:
 		
 	// texture creation ------------------------
 	
-	void allocate(int widthHeight, int internalGLScaleMode);
+    void allocate(int widthHeight, int internalGLScaleMode); // Square
+    void allocate(int width, int height, int internalGLScaleMode); // Not square
 	void clearTexture();
 	
 	void addMisc(string fileName, int x, int y, int glType=GL_RGBA);

@@ -110,7 +110,7 @@ void ofxSpriteSheetRenderer::clearTexture()
 }
 
 void ofxSpriteSheetRenderer::allocate(int widthHeight, int internalGLScaleMode)
-{
+{ // Square
 	if(texture == NULL)
 	{
 		tileSize_f = tileSize;
@@ -130,6 +130,27 @@ void ofxSpriteSheetRenderer::allocate(int widthHeight, int internalGLScaleMode)
 		cerr<<"cannot double allocate ofxSpriteSheetRenderer Texture! Please clearTexture() first"<<endl;
 }
 
+void ofxSpriteSheetRenderer::allocate(int width, int height, int internalGLScaleMode)
+{ // Not square
+    if(texture == NULL)
+    {
+        tileSize_f = tileSize;
+#ifdef TARGET_OPENGLES	// if we don't have arb, it's crazy important that things are power of 2 so that this float is set properly
+        tileSize_f /= widthHeight;
+#endif
+        
+        spriteSheetWidth = width/tileSize;
+        
+        CollageTexture * newTexture = new CollageTexture();
+        
+        newTexture->allocate(width, height, GL_RGBA, internalGLScaleMode);
+        
+        texture = (ofTexture*) newTexture;
+    }
+    else
+        cerr<<"cannot double allocate ofxSpriteSheetRenderer Texture! Please clearTexture() first"<<endl;
+}
+
 void ofxSpriteSheetRenderer::addMisc(string fileName, int x, int y, int glType)
 {
 	CollageTexture *cTexture = dynamic_cast<CollageTexture*>(texture);
@@ -143,13 +164,23 @@ void ofxSpriteSheetRenderer::finishTexture()
 }
 
 void ofxSpriteSheetRenderer::loadTexture(string fileName, int widthHeight, int internalGLScaleMode)
-{
+{ // Square
 	clearTexture();
 	clear();
 	allocate(widthHeight, internalGLScaleMode);
 	addMisc(fileName, 0, 0);
 	finishTexture();
 	textureIsExternal = false;
+}
+
+void ofxSpriteSheetRenderer::loadTexture(string fileName, int width, int height, int internalGLScaleMode)
+{ // Not square
+    clearTexture();
+    clear();
+    allocate(width, height, internalGLScaleMode);
+    addMisc(fileName, 0, 0);
+    finishTexture();
+    textureIsExternal = false;
 }
 
 void ofxSpriteSheetRenderer::loadTexture(ofTexture * _texture)
