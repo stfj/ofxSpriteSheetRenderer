@@ -335,7 +335,7 @@ bool ofxSpriteSheetRenderer::addRotatedTile(animation_t* sprite, float x, float 
 	return addRotatedTile(index, frame, x, y, rX, rY, layer, sprite->w, sprite->h, f, scale, rot, collisionBox, r, g, b, alpha);
 }
 
-bool ofxSpriteSheetRenderer::addCenteredTile(animation_t* sprite, float x, float y, int layer, flipDirection f, float scale, int r, int g, int b, int alpha) {
+bool ofxSpriteSheetRenderer::addCenteredTile(animation_t* sprite, float x, float y, int layer, flipDirection f, float scale, int r, int g, int b, int alpha) { // Proportional scaling
 	int index, frame;
 	
 	if(layer==-1)
@@ -365,6 +365,38 @@ bool ofxSpriteSheetRenderer::addCenteredTile(animation_t* sprite, float x, float
 	}
 	
 	return addCenteredTile(index, frame, x, y, layer, sprite->w, sprite->h, f, scale, r, g, b, alpha);
+}
+
+bool ofxSpriteSheetRenderer::addCenteredTile(animation_t* sprite, float x, float y, int layer, flipDirection f, ofVec2f scaleVec, int r, int g, int b, int alpha) { // Disproportional scaling possible
+    int index, frame;
+    
+    if(layer==-1)
+        layer=defaultLayer;
+    
+    // animation
+    if(sprite->total_frames > 1)
+        // still animating
+        if(sprite->loops != 0)
+            // time to advance frame
+            if(gameTime > sprite->next_tick) {
+                sprite->frame += sprite->frame_skip;
+                // increment frame and keep it within range
+                if(sprite->frame < 0) sprite->frame = sprite->total_frames;
+                if(sprite->frame >= sprite->total_frames) sprite->frame = 0;
+                sprite->next_tick = gameTime + sprite->frame_duration;
+                // decrement loop count if cycle complete
+                if( ((sprite->frame_skip > 0 && sprite->frame == sprite->total_frames-1) || (sprite->frame_skip < 0 && sprite->frame == 0)) && sprite->loops > 0) sprite->loops--;
+            }
+    
+    if(sprite->loops == 0 && sprite->final_index >= 0) {
+        index = sprite->final_index;
+        frame = 0;
+    } else {
+        index = sprite->index;
+        frame = sprite->frame;
+    }
+    
+    return addCenteredTile(index, frame, x, y, layer, sprite->w, sprite->h, f, scaleVec, r, g, b, alpha);
 }
 
 bool ofxSpriteSheetRenderer::addCenterRotatedTile(animation_t* sprite, float x, float y, int layer, flipDirection f, float scale, int rot, CollisionBox_t* collisionBox, int r, int g, int b, int alpha){
@@ -631,7 +663,7 @@ bool ofxSpriteSheetRenderer::addRotatedTile(int tile_name, int frame, float x, f
 }
 
 bool ofxSpriteSheetRenderer::addCenteredTile(int tile_name, int frame, float x, float y, int layer, float w, float h, flipDirection f, float scale, int r, int g, int b, int alpha)
-{
+{ // Proportional scaling
 	if(layer==-1)
 		layer=defaultLayer;
 	
@@ -741,6 +773,119 @@ bool ofxSpriteSheetRenderer::addCenteredTile(int tile_name, int frame, float x, 
 	numSprites[layer]++;
 	
 	return true;
+}
+
+bool ofxSpriteSheetRenderer::addCenteredTile(int tile_name, int frame, float x, float y, int layer, float w, float h, flipDirection f, ofVec2f scaleVec, int r, int g, int b, int alpha)
+{ // Disproportional scaling possible
+    if(layer==-1)
+        layer=defaultLayer;
+    
+    if(texture == NULL)
+    {
+        cerr << "RENDER ERROR: No texture loaded!"  << endl;
+        return false;
+    }
+    
+    if(numSprites[layer] >= tilesPerLayer)
+    {
+        cerr << "RENDER ERROR: Layer " << layer << " over allocated! Max " << tilesPerLayer << " sprites per layer!"  << endl;
+        return false;
+    }
+    
+    if(layer > numLayers)
+    {
+        cerr << "RENDER ERROR: Bogus layer '" << layer << "'! Only " << numLayers << " layers compiled!"  << endl;
+        return false;
+    }
+    
+    float frameX;
+    float frameY;
+    int layerOffset = layer*tilesPerLayer;
+    int vertexOffset = (layerOffset + numSprites[layer])*18;
+    int colorOffset = (layerOffset + numSprites[layer])*24;
+    
+    getFrameXandY(tile_name, frameX, frameY);
+    
+    //frameX += frame*w*tileSize_f;
+    frameX += frame*w*tileSize_fVec.x;
+    
+    addTexCoords(f, frameX, frameY, layer, w, h);
+    
+    //rot*=2;
+    
+    //w*=tileSize*scale;
+    w*=tileSizeVec.x*scaleVec.x;
+    w/=2;
+    //h*=tileSize*scale;
+    h*=tileSizeVec.y*scaleVec.y;
+    h/=2;
+    
+    //verticies ------------------------------------
+    verts[vertexOffset     ] = x-w; //ul ur ll
+    verts[vertexOffset + 1 ] = y-h;
+    verts[vertexOffset + 2 ] = 0;
+    
+    verts[vertexOffset + 3 ] = x+w;
+    verts[vertexOffset + 4 ] = y-h;
+    verts[vertexOffset + 5 ] = 0;
+    
+    verts[vertexOffset + 6 ] = x-w;
+    verts[vertexOffset + 7 ] = y+h;
+    verts[vertexOffset + 8 ] = 0;
+    
+    
+    
+    verts[vertexOffset + 9 ] = x+w; //ur ll lr
+    verts[vertexOffset + 10] = y-h;
+    verts[vertexOffset + 11] = 0;
+    
+    verts[vertexOffset + 12] = x-w;
+    verts[vertexOffset + 13] = y+h;
+    verts[vertexOffset + 14] = 0;
+    
+    verts[vertexOffset + 15] = x+w;
+    verts[vertexOffset + 16] = y+h;
+    verts[vertexOffset + 17] = 0;
+    
+    //colors ---------------------------------------
+    
+    colors[colorOffset	 ] = r;
+    colors[colorOffset + 1 ] = g;
+    colors[colorOffset + 2 ] = b;
+    colors[colorOffset + 3 ] = alpha;
+    
+    colors[colorOffset + 4 ] = r;
+    colors[colorOffset + 5 ] = g;
+    colors[colorOffset + 6 ] = b;
+    colors[colorOffset + 7 ] = alpha;
+    
+    colors[colorOffset + 8 ] = r;
+    colors[colorOffset + 9 ] = g;
+    colors[colorOffset + 10] = b;
+    colors[colorOffset + 11] = alpha;
+    
+    
+    
+    colors[colorOffset + 12] = r;
+    colors[colorOffset + 13] = g;
+    colors[colorOffset + 14] = b;
+    colors[colorOffset + 15] = alpha;
+    
+    colors[colorOffset + 16] = r;
+    colors[colorOffset + 17] = g;
+    colors[colorOffset + 18] = b;
+    colors[colorOffset + 19] = alpha;
+    
+    colors[colorOffset + 20] = r;
+    colors[colorOffset + 21] = g;
+    colors[colorOffset + 22] = b;
+    colors[colorOffset + 23] = alpha;
+    
+    //----------------------------------------------
+    
+    numSprites[layer]++;
+    
+    return true;
 }
 
 bool ofxSpriteSheetRenderer::addCenterRotatedTile(int tile_name, int frame, float x, float y, int layer, float w, float h, flipDirection f, float scale, int rot, CollisionBox_t* collisionBox, int r, int g, int b, int alpha)

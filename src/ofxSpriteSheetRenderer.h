@@ -121,14 +121,16 @@ public:
 	bool addTile             (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	bool addRotatedTile(animation_t* sprite, float x, float y, float rX, float rY, int layer = -1,     flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
 	
-	bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, float scale = 1.0,          int r=255, int g=255, int b=255, int alpha=255);
+	bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, float scale = 1.0,          int r=255, int g=255, int b=255, int alpha=255); // Proportional scaling
+    bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, ofVec2f scaleVec = ofVec2f(1.0, 1.0),          int r=255, int g=255, int b=255, int alpha=255); // Disproportional scaling possible
 	bool addCenterRotatedTile(animation_t* sprite, float x, float y, int layer = -1,     flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
 	
 	bool addTile             (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	
 	bool addRotatedTile(int tile_name, int frame, float x, float y, float rX, float rY, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255);
 	
-	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255);
+	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255); // Proportional scaling
+    bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, ofVec2f scaleVec = ofVec2f(1.0, 1.0),            int r=255, int g=255, int b=255, int alpha=255); // Disproportional scaling possible
 	bool addCenterRotatedTile(int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255);
 		
 	void update(unsigned long time);
