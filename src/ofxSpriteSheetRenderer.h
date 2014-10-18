@@ -73,10 +73,12 @@ enum flipDirection { F_NONE=0, F_HORIZ, F_VERT, F_HORIZ_VERT };
 class ofxSpriteSheetRenderer
 {
 public:
-	ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize);
+    ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize); // Square tiles
+    ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileWidth, int _tileHeight); // Not square tiles
 	~ofxSpriteSheetRenderer();
 	
-	void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize);
+    void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize); // Square tiles
+    void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileWidth, int _tileHeight); // Not square tiles
 	
     void loadTexture(string fileName, int widthHeight, int internalGLScaleMode); // Square
     void loadTexture(string fileName, int width, int height, int internalGLScaleMode); // Not square
@@ -136,9 +138,13 @@ public:
 		return spriteSheetWidth;
 	};
 	
-	int getTileSize(){
+	/*int getTileSize(){
 		return tileSize;
-	};
+	};*/
+    ofVec2f getTileSize(){
+        return tileSizeVec;
+    };
+    
 	
 	bool safeMode;
 		
@@ -163,7 +169,8 @@ public:
 	
 	void addTexCoords(flipDirection f, float &frameX, float &frameY, int layer, float x=1, float y=1);
 		
-	float tileSize_f;
+    //float tileSize_f; // Square tiles
+    ofVec2f tileSize_fVec; // Square and not-square tiles
 	
 	bool textureIsExternal;
 	
@@ -172,7 +179,8 @@ public:
 	int numLayers;
 	int defaultLayer;
 	int tilesPerLayer;
-	int tileSize;
+    //int tileSize; // Square tiles
+    ofVec2f tileSizeVec; // Square and not-square tiles
 	
 	unsigned long gameTime;
 	

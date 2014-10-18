@@ -28,7 +28,7 @@ float _sin[360];
 float _cos[360];
 
 ofxSpriteSheetRenderer::ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize)
-{
+{ // Square tiles
 	texture = NULL;
 	verts = NULL;
 	coords = NULL;
@@ -55,6 +55,34 @@ ofxSpriteSheetRenderer::ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLaye
 	brushIndex = -1;
 }
 
+ofxSpriteSheetRenderer::ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileWidth, int _tileHeight)
+{ // Not square tiles
+    texture = NULL;
+    verts = NULL;
+    coords = NULL;
+    colors = NULL;
+    numSprites = NULL;
+    
+    textureIsExternal = false;
+    
+    safeMode = true;
+    
+    gameTime = ofGetElapsedTimeMillis();
+    
+    reAllocateArrays(_numLayers, _tilesPerLayer, _defaultLayer, _tileWidth, _tileHeight);
+    
+    for(int i=0;i<360;i++)
+    {
+        _sin[i] = sin(ofMap(i,0,360,0,TWO_PI));
+        _cos[i] = cos(ofMap(i,0,360,0,TWO_PI));
+    }
+    
+    //shape stuff
+    setCircleResolution(22);
+    shapeR=shapeG=shapeB=shapeA=255;
+    brushIndex = -1;
+}
+
 ofxSpriteSheetRenderer::~ofxSpriteSheetRenderer()
 {
 	if(texture != NULL && textureIsExternal)
@@ -71,9 +99,10 @@ ofxSpriteSheetRenderer::~ofxSpriteSheetRenderer()
 }
 
 void ofxSpriteSheetRenderer::reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize)
-{
+{ // Square tiles
 	numLayers = _numLayers;
-	tileSize = _tileSize;
+    //tileSize = _tileSize;
+    tileSizeVec.set(_tileSize, _tileSize); // We'll use the vector throughout to support both square and not square tiles.
 	tilesPerLayer = _tilesPerLayer;
 	defaultLayer = _defaultLayer;
 	
@@ -95,6 +124,31 @@ void ofxSpriteSheetRenderer::reAllocateArrays(int _numLayers, int _tilesPerLayer
 	clearTexture();
 }
 
+void ofxSpriteSheetRenderer::reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileWidth, int _tileHeight)
+{ // Not square tiles
+    numLayers = _numLayers;
+    tileSizeVec.set(_tileWidth, _tileHeight);
+    tilesPerLayer = _tilesPerLayer;
+    defaultLayer = _defaultLayer;
+    
+    if(verts != NULL)
+        delete[] verts;
+    if(coords != NULL)
+        delete[] coords;
+    if(colors != NULL)
+        delete[] colors;
+    if(numSprites != NULL)
+        delete[] numSprites;
+    
+    verts = new float[numLayers*tilesPerLayer*18];
+    coords = new float[numLayers*tilesPerLayer*12];
+    colors = new unsigned char[numLayers*tilesPerLayer*24];
+    numSprites = new int[numLayers];
+    
+    clear();
+    clearTexture();
+}
+
 void ofxSpriteSheetRenderer::clearTexture()
 {
 	if(texture != NULL)
@@ -113,12 +167,16 @@ void ofxSpriteSheetRenderer::allocate(int widthHeight, int internalGLScaleMode)
 { // Square
 	if(texture == NULL)
 	{
-		tileSize_f = tileSize;
+        //tileSize_f = tileSize;
+        tileSize_fVec.set(tileSizeVec);
 		#ifdef TARGET_OPENGLES	// if we don't have arb, it's crazy important that things are power of 2 so that this float is set properly
-		tileSize_f /= widthHeight;
+        //tileSize_f /= widthHeight;
+        tileSize_fVec.x /= widthHeight;
+        tileSize_fVec.y /= widthHeight;
 		#endif
 		
-		spriteSheetWidth = widthHeight/tileSize;
+        //spriteSheetWidth = widthHeight/tileSize;
+        spriteSheetWidth = widthHeight/tileSizeVec.x;
 		
 		CollageTexture * newTexture = new CollageTexture();
 		
@@ -134,12 +192,16 @@ void ofxSpriteSheetRenderer::allocate(int width, int height, int internalGLScale
 { // Not square
     if(texture == NULL)
     {
-        tileSize_f = tileSize;
+        //tileSize_f = tileSize;
+        tileSize_fVec.set(tileSizeVec.x, tileSizeVec.y);
 #ifdef TARGET_OPENGLES	// if we don't have arb, it's crazy important that things are power of 2 so that this float is set properly
-        tileSize_f /= widthHeight;
+        //tileSize_f /= widthHeight;
+        tileSize_fVec.x /= width;
+        tileSize_fVec.y /= height;
 #endif
         
-        spriteSheetWidth = width/tileSize;
+        //spriteSheetWidth = width/tileSize;
+        spriteSheetWidth = width/tileSizeVec.x;
         
         CollageTexture * newTexture = new CollageTexture();
         
@@ -368,12 +430,15 @@ bool ofxSpriteSheetRenderer::addTile(int tile_name, int frame, float x, float y,
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
+    //frameX += frame*w*tileSize_f;
+    frameX += frame*w*tileSize_fVec.x;
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
 	
-	w*=tileSize;
-	h*=tileSize;
+    //w*=tileSize;
+    w*=tileSizeVec.x;
+    //h*=tileSize;
+    h*=tileSizeVec.y;
 	
 	//verticies ------------------------------------
 	verts[vertexOffset     ] = x;
@@ -474,13 +539,16 @@ bool ofxSpriteSheetRenderer::addRotatedTile(int tile_name, int frame, float x, f
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
+    //frameX += frame*w*tileSize_f;
+    frameX += frame*w*tileSize_fVec.x;
 	//add a check here to make animations wrap around
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
 	
-	w*=scale*tileSize;
-	h*=scale*tileSize;
+    //w*=scale*tileSize;
+    w*=scale*tileSizeVec.x;
+    //h*=scale*tileSize;
+    h*=scale*tileSizeVec.y;
 	
 	float nW = w * -rX;
 	float nH = h * -rY;
@@ -593,15 +661,18 @@ bool ofxSpriteSheetRenderer::addCenteredTile(int tile_name, int frame, float x, 
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
+    //frameX += frame*w*tileSize_f;
+    frameX += frame*w*tileSize_fVec.x;
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
 	
 	//rot*=2;
 	
-	w*=tileSize*scale;
+    //w*=tileSize*scale;
+    w*=tileSizeVec.x*scale;
 	w/=2;
-	h*=tileSize*scale;
+    //h*=tileSize*scale;
+    h*=tileSizeVec.y*scale;
 	h/=2;
 	
 	//verticies ------------------------------------
@@ -703,7 +774,8 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(int tile_name, int frame, floa
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
+    //frameX += frame*w*tileSize_f;
+    frameX += frame*w*tileSize_fVec.x;
 	//add a check here to make animations wrap around
 	
 	addTexCoords(f, frameX, frameY, layer, w, h);
@@ -747,10 +819,12 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(int tile_name, int frame, floa
 		}
 	}*/
 
-	w*=scale*tileSize;
+    //w*=scale*tileSize;
+    w*=scale*tileSizeVec.x;
 	w/=2;
 	
-	h*=scale*tileSize;
+    //h*=scale*tileSize;
+    h*=scale*tileSizeVec.y;
 	h/=2;
 	
 	//verticies ------------------------------------
@@ -866,8 +940,10 @@ void ofxSpriteSheetRenderer::addTexCoords(flipDirection f, float &frameX, float 
 	int layerOffset = layer*tilesPerLayer;
 	int coordOffset = (layerOffset + numSprites[layer])*12;
 	
-	w*=tileSize_f;
-	h*=tileSize_f;
+    //w*=tileSize_f;
+    w*=tileSize_fVec.x;
+    //h*=tileSize_f;
+    h*=tileSize_fVec.y;
 	
 	switch (f) {
 		case F_NONE:
@@ -1677,8 +1753,10 @@ void ofxSpriteSheetRenderer::getFrameXandY(int tile_position, float &x, float &y
 	y = (tile_position / spriteSheetWidth);
 	x = (tile_position - y * spriteSheetWidth);
 	
-	x*=tileSize_f;
-	y*=tileSize_f;
+    //x*=tileSize_f;
+    x*=tileSize_fVec.x;
+    //y*=tileSize_f;
+    y*=tileSize_fVec.y;
 }
 
 float ofxSpriteSheetRenderer::getX(int x, int y, int angle){
@@ -1695,7 +1773,8 @@ void ofxSpriteSheetRenderer::setBrushIndex(int index, int wh)
 	brushIndex = index;
 	getFrameXandY(brushIndex, brushX, brushY);
 	
-	brushSize = tileSize_f * wh;
+    //brushSize = tileSize_f * wh;
+    brushSize = tileSize_fVec.x * wh; // FIND ME: NOT SURE IF THIS IS RIGHT; SEEMS TO WORK.
 	halfBrushSize = brushSize/2;
 }
 
