@@ -73,15 +73,12 @@ enum flipDirection { F_NONE=0, F_HORIZ, F_VERT, F_HORIZ_VERT };
 class ofxSpriteSheetRenderer
 {
 public:
-    ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize); // Square tiles
-    ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileWidth, int _tileHeight); // Not square tiles
+	ofxSpriteSheetRenderer(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize);
 	~ofxSpriteSheetRenderer();
 	
-    void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize); // Square tiles
-    void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileWidth, int _tileHeight); // Not square tiles
+	void reAllocateArrays(int _numLayers, int _tilesPerLayer, int _defaultLayer, int _tileSize);
 	
-    void loadTexture(string fileName, int widthHeight, int internalGLScaleMode); // Square
-    void loadTexture(string fileName, int width, int height, int internalGLScaleMode); // Not square
+	void loadTexture(string fileName, int widthHeight, int internalGLScaleMode);
 	void loadTexture(ofTexture * _texture);
 	void loadTexture(CollageTexture * _texture);
 	void loadTexture(PixelTexture * _texture);
@@ -121,16 +118,14 @@ public:
 	bool addTile             (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	bool addRotatedTile(animation_t* sprite, float x, float y, float rX, float rY, int layer = -1,     flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
 	
-	bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, float scale = 1.0,          int r=255, int g=255, int b=255, int alpha=255); // Proportional scaling
-    bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, ofVec2f scaleVec = ofVec2f(1.0, 1.0),          int r=255, int g=255, int b=255, int alpha=255); // Disproportional scaling possible
+	bool addCenteredTile     (animation_t* sprite,         float x, float y, int layer = -1,                        flipDirection f = F_NONE, float scale = 1.0,          int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenterRotatedTile(animation_t* sprite, float x, float y, int layer = -1,     flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255); // this assumes the sprite is width height equal
 	
 	bool addTile             (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE,                             int r=255, int g=255, int b=255, int alpha=255);
 	
 	bool addRotatedTile(int tile_name, int frame, float x, float y, float rX, float rY, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255);
 	
-	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255); // Proportional scaling
-    bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, ofVec2f scaleVec = ofVec2f(1.0, 1.0),            int r=255, int g=255, int b=255, int alpha=255); // Disproportional scaling possible
+	bool addCenteredTile     (int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0,            int r=255, int g=255, int b=255, int alpha=255);
 	bool addCenterRotatedTile(int tile_name, int frame, float x, float y, int layer = -1, float w = 1, float h = 1, flipDirection f = F_NONE, float scale=1.0, int rot=0, CollisionBox_t* collisionBox=NULL, int r=255, int g=255, int b=255, int alpha=255);
 		
 	void update(unsigned long time);
@@ -140,20 +135,15 @@ public:
 		return spriteSheetWidth;
 	};
 	
-	/*int getTileSize(){
+	int getTileSize(){
 		return tileSize;
-	};*/
-    ofVec2f getTileSize(){
-        return tileSizeVec;
-    };
-    
+	};
 	
 	bool safeMode;
 		
 	// texture creation ------------------------
 	
-    void allocate(int widthHeight, int internalGLScaleMode); // Square
-    void allocate(int width, int height, int internalGLScaleMode); // Not square
+	void allocate(int widthHeight, int internalGLScaleMode);
 	void clearTexture();
 	
 	void addMisc(string fileName, int x, int y, int glType=GL_RGBA);
@@ -171,8 +161,7 @@ public:
 	
 	void addTexCoords(flipDirection f, float &frameX, float &frameY, int layer, float x=1, float y=1);
 		
-    //float tileSize_f; // Square tiles
-    ofVec2f tileSize_fVec; // Square and not-square tiles
+	float tileSize_f;
 	
 	bool textureIsExternal;
 	
@@ -181,8 +170,7 @@ public:
 	int numLayers;
 	int defaultLayer;
 	int tilesPerLayer;
-    //int tileSize; // Square tiles
-    ofVec2f tileSizeVec; // Square and not-square tiles
+	int tileSize;
 	
 	unsigned long gameTime;
 	
