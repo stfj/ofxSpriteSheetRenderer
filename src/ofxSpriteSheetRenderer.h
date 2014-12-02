@@ -155,6 +155,8 @@ public:
 	protected:
 	
 	void getFrameXandY(int tile_position, float &x, float &y);
+    
+    ofPoint getFramePosOnSheet(float _frameX, float _frameY, int _frame, float _w); // Added by J. Matthew Griffis to support multi-row animation. Returns the x and y of the frame as a point.
 	
 	float getX(int x, int y, int angle);
 	float getY(int x, int y, int angle);

@@ -337,9 +337,9 @@ bool ofxSpriteSheetRenderer::addTile(int tile_name, int frame, float x, float y,
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
+	ofPoint framePos = getFramePosOnSheet(frameX, frameY, frame, w);
 	
-	addTexCoords(f, frameX, frameY, layer, w, h);
+	addTexCoords(f, framePos.x, framePos.y, layer, w, h);
 	
 	w*=tileSize;
 	h*=tileSize;
@@ -443,10 +443,9 @@ bool ofxSpriteSheetRenderer::addRotatedTile(int tile_name, int frame, float x, f
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
-	//add a check here to make animations wrap around
+	ofPoint framePos = getFramePosOnSheet(frameX, frameY, frame, w);
 	
-	addTexCoords(f, frameX, frameY, layer, w, h);
+	addTexCoords(f, framePos.x, framePos.y, layer, w, h);
 	
 	w*=scale*tileSize;
 	h*=scale*tileSize;
@@ -562,9 +561,9 @@ bool ofxSpriteSheetRenderer::addCenteredTile(int tile_name, int frame, float x, 
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
+    ofPoint framePos = getFramePosOnSheet(frameX, frameY, frame, w);
 	
-	addTexCoords(f, frameX, frameY, layer, w, h);
+	addTexCoords(f, framePos.x, framePos.y, layer, w, h);
 	
 	//rot*=2;
 	
@@ -672,10 +671,9 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(int tile_name, int frame, floa
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
-	//add a check here to make animations wrap around
+	ofPoint framePos = getFramePosOnSheet(frameX, frameY, frame, w);
 	
-	addTexCoords(f, frameX, frameY, layer, w, h);
+	addTexCoords(f, framePos.x, framePos.y, layer, w, h);
 	
 	
 	//these two should never be called
@@ -1648,6 +1646,40 @@ void ofxSpriteSheetRenderer::getFrameXandY(int tile_position, float &x, float &y
 	
 	x*=tileSize_f;
 	y*=tileSize_f;
+}
+
+ofPoint ofxSpriteSheetRenderer::getFramePosOnSheet(float _frameX, float _frameY, int _frame, float _w) {
+    /*
+     Added by J. Matthew Griffis to support multi-row animation.
+     
+     Note that this assumes your sprite sheet fits as many frames in a single row as possible. That is, if for some reason you have a multi-row animation but you chose to start the next row before you ran out of space for frames on the current row, this won't work.
+     
+     If you really want to have that though, you could handle it like this: Simply add this line:
+     
+     float spriteSheetWidthUsed = spriteSheetWidth * [whatever fraction of total sheet width you are using];
+     
+     Then replace spriteSheetWidth below with spriteSheetWidthUsed. (Don't just change spriteSheetWidth's value. It's used for other things.)
+     
+     OR...you could, when using the "loadTexture" function to load your sprite sheet, simply not put the true file width, but instead put the width that you are actually using. That works, too.
+     */
+    
+    ofPoint framePos;
+    framePos.set(_frameX, _frameY); // These get passed in externally and are probably zero, but maybe not, so we'll use them.
+    
+    /*
+     Whether the animation is a single row or multiple rows, let's figure out what row the current frame is on, using a simple calculation. We divide the frame number by the number of frames per row, and use the "floor" function to round down to the nearest integer.
+     */
+    int rowNum = floor(_frame / spriteSheetWidth);
+    /*
+     Why does that work? Remember that the frame numbering starts at 0. So, in a 4-frame-wide sheet, frame 3 will be the last frame in the first row. 3/4 = 0.75; floor(0.75) = 0; therefore frame 3 is in the first row (numbered 0). What about frame 4? 4/4 = 1; floor(1) = 1; therefore frame 4 is in the second row (numbered 1).
+     
+     Now we can use that row number to calculate the frame's position. If the frame is not in the first row, we need to offset the x position by however many row widths (sheet widths) we've already gone through, and the y position by however many row heights (frame heights) we've already gone through.
+     */
+    framePos.x += (_frame - spriteSheetWidth * rowNum) * _w * tileSize_f;
+    framePos.y += tileSize_f * rowNum;
+
+    // Now we just have to return the frame's position!
+    return framePos;
 }
 
 float ofxSpriteSheetRenderer::getX(int x, int y, int angle){
