@@ -337,9 +337,9 @@ bool ofxSpriteSheetRenderer::addTile(int tile_name, int frame, float x, float y,
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
+	ofPoint framePos = getFramePosOnSheet(frameX, frameY, frame, w);
 	
-	addTexCoords(f, frameX, frameY, layer, w, h);
+	addTexCoords(f, framePos.x, framePos.y, layer, w, h);
 	
 	w*=tileSize;
 	h*=tileSize;
@@ -443,10 +443,9 @@ bool ofxSpriteSheetRenderer::addRotatedTile(int tile_name, int frame, float x, f
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
-	//add a check here to make animations wrap around
+	ofPoint framePos = getFramePosOnSheet(frameX, frameY, frame, w);
 	
-	addTexCoords(f, frameX, frameY, layer, w, h);
+	addTexCoords(f, framePos.x, framePos.y, layer, w, h);
 	
 	w*=scale*tileSize;
 	h*=scale*tileSize;
@@ -672,10 +671,9 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(int tile_name, int frame, floa
 	
 	getFrameXandY(tile_name, frameX, frameY);
 	
-	frameX += frame*w*tileSize_f;
-	//add a check here to make animations wrap around
+	ofPoint framePos = getFramePosOnSheet(frameX, frameY, frame, w);
 	
-	addTexCoords(f, frameX, frameY, layer, w, h);
+	addTexCoords(f, framePos.x, framePos.y, layer, w, h);
 	
 	
 	//these two should never be called
