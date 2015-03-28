@@ -192,7 +192,7 @@ bool ofxSpriteSheetRenderer::addTile(animation_t* sprite, float x, float y, int 
 			if(gameTime > sprite->next_tick) {
 				sprite->frame += sprite->frame_skip;
 				// increment frame and keep it within range
-				if(sprite->frame < 0) sprite->frame = sprite->total_frames;
+				if(sprite->frame < 0) sprite->frame = sprite->total_frames - 1;
 				if(sprite->frame >= sprite->total_frames) sprite->frame = 0;
 				sprite->next_tick = gameTime + sprite->frame_duration;
 				// decrement loop count if cycle complete
@@ -224,7 +224,7 @@ bool ofxSpriteSheetRenderer::addRotatedTile(animation_t* sprite, float x, float 
 			if(gameTime > sprite->next_tick) {
 				sprite->frame += sprite->frame_skip;
 				// increment frame and keep it within range
-				if(sprite->frame < 0) sprite->frame = sprite->total_frames;
+				if(sprite->frame < 0) sprite->frame = sprite->total_frames - 1;
 				if(sprite->frame >= sprite->total_frames) sprite->frame = 0;
 				sprite->next_tick = gameTime + sprite->frame_duration;
 				// decrement loop count if cycle complete
@@ -256,7 +256,7 @@ bool ofxSpriteSheetRenderer::addCenteredTile(animation_t* sprite, float x, float
 			if(gameTime > sprite->next_tick) {
 				sprite->frame += sprite->frame_skip;
 				// increment frame and keep it within range
-				if(sprite->frame < 0) sprite->frame = sprite->total_frames;
+				if(sprite->frame < 0) sprite->frame = sprite->total_frames - 1;
 				if(sprite->frame >= sprite->total_frames) sprite->frame = 0;
 				sprite->next_tick = gameTime + sprite->frame_duration;
 				// decrement loop count if cycle complete
@@ -288,7 +288,7 @@ bool ofxSpriteSheetRenderer::addCenterRotatedTile(animation_t* sprite, float x, 
 			if(gameTime > sprite->next_tick) {
 				sprite->frame += sprite->frame_skip;
 				// increment frame and keep it within range
-				if(sprite->frame < 0) sprite->frame = sprite->total_frames;
+				if(sprite->frame < 0) sprite->frame = sprite->total_frames - 1;
 				if(sprite->frame >= sprite->total_frames) sprite->frame = 0;
 				sprite->next_tick = gameTime + sprite->frame_duration;
 				// decrement loop count if cycle complete
