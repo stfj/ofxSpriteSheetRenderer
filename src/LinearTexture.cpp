@@ -114,7 +114,7 @@ void LinearTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBE
 	//		glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, (GLint)texData.tex_w, (GLint)texData.tex_h, 0, GL_LUMINANCE, PIXEL_TYPE, 0);  // init to black...
 	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, (GLint) texData.tex_w, (GLint) texData.tex_h, 0, internal.glType, internal.pixelType, 0);  // init to black...
 #else
-	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, texData.tex_w, texData.tex_h, 0, internal.glTypeInternal, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, texData.tex_w, texData.tex_h, 0, internal.glType, GL_UNSIGNED_BYTE, 0);
 #endif
 	
 	
