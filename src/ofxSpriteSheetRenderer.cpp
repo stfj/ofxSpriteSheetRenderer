@@ -961,7 +961,7 @@ bool ofxSpriteSheetRenderer::addLine(ofVec2f a, ofVec2f b, int width, int layer,
 	
 	
 	//based off http://answers.oreilly.com/topic/1669-how-to-render-anti-aliased-lines-with-textures-in-ios-4/
- 	ofVec2f e = (b - a).normalized() * width;
+ 	ofVec2f e = (b - a).getNormalized() * width;
 	
  	ofVec2f N = ofVec2f(-e.y, e.x);
  	ofVec2f S = -N;
