@@ -13,11 +13,11 @@ void PixelTexture::loadImage(string textureName)
 {
 	ofImage loader;
 	loader.setUseTexture(false);
-	loader.loadImage(textureName);
+	loader.load(textureName);
 	
 	int glType = GL_RGB;
 	
-	if(loader.bpp==32){
+	if(loader.getImageType() == OF_IMAGE_COLOR_ALPHA){
 		glType = GL_RGBA;
 		
 	}
@@ -32,7 +32,7 @@ void PixelTexture::loadTexture(string textureName, int glType)
 {
 	ofImage loader;
 	loader.setUseTexture(false);
-	loader.loadImage(textureName);
+	loader.load(textureName);
 	allocate(loader.getWidth(), loader.getHeight(), glType);
 	loadData(loader.getPixels(), loader.getWidth(), loader.getHeight(), glType);
 	
@@ -65,11 +65,11 @@ void PixelTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBEx
 		texData.textureTarget = GL_TEXTURE_2D;
 	}
 	
-	texData.glTypeInternal = internalGlDataType;
+	texData.glInternalFormat = internalGlDataType;
 	
 	
 	// MEMO: todo, add more types
-	switch(texData.glTypeInternal) {
+	switch(texData.glInternalFormat) {
 #ifndef TARGET_OPENGLES	
 		case GL_RGBA32F_ARB:
 		case GL_RGBA16F_ARB:
@@ -111,10 +111,10 @@ void PixelTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBEx
 	// can't do this on OpenGL ES: on full-blown OpenGL, 
 	// internalGlDataType and glDataType (GL_LUMINANCE below)
 	// can be different; on ES they must be exactly the same.
-	//		glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, (GLint)texData.tex_w, (GLint)texData.tex_h, 0, GL_LUMINANCE, PIXEL_TYPE, 0);  // init to black...
-	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, (GLint) texData.tex_w, (GLint) texData.tex_h, 0, internal.glType, internal.pixelType, 0);  // init to black...
+	//		glTexImage2D(texData.textureTarget, 0, texData.glInternalFormat, (GLint)texData.tex_w, (GLint)texData.tex_h, 0, GL_LUMINANCE, PIXEL_TYPE, 0);  // init to black...
+	glTexImage2D(texData.textureTarget, 0, texData.glInternalFormat, (GLint) texData.tex_w, (GLint) texData.tex_h, 0, internal.glType, internal.pixelType, 0);  // init to black...
 #else
-	glTexImage2D(texData.textureTarget, 0, texData.glTypeInternal, texData.tex_w, texData.tex_h, 0, texData.glTypeInternal, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(texData.textureTarget, 0, texData.glInternalFormat, texData.tex_w, texData.tex_h, 0, texData.glInternalFormat, GL_UNSIGNED_BYTE, 0);
 #endif
 	
 	
