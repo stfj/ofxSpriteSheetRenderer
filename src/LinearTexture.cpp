@@ -23,7 +23,7 @@ void LinearTexture::loadImage(string textureName)
 	}
 	
 	allocate(loader.getWidth(), loader.getHeight(), glType);
-	loadData(loader.getPixels(), loader.getWidth(), loader.getHeight(), glType);
+	loadData(loader.getPixels());
 	
 	loader.clear();
 }
@@ -34,8 +34,7 @@ void LinearTexture::loadTexture(string textureName, int glType)
 	loader.setUseTexture(false);
 	loader.load(textureName);
 	allocate(loader.getWidth(), loader.getHeight(), glType);
-	loadData(loader.getPixels(), loader.getWidth(), loader.getHeight(), glType);
-	
+	loadData(loader.getPixels());
 	loader.clear();
 }
 
